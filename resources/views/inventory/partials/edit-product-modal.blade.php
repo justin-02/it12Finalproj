@@ -35,8 +35,8 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group-enhanced">
-                                <label for="edit_current_stock_kilos" class="form-label-enhanced">Current Stock (Kilos)</label>
-                                <input type="number" step="0.1" class="form-control-enhanced" id="edit_current_stock_kilos" name="current_stock_kilos" min="0" placeholder="0.0">
+                                <label for="edit_current_stock_sacks" class="form-label-enhanced">Current Stock (Sacks)</label>
+                                <input type="number" step="0.1" class="form-control-enhanced" id="edit_current_stock_sacks" name="current_stock_sacks" min="0" placeholder="0.0">
                                 <small class="form-hint"><i class="bi bi-info-circle me-1"></i>Decimal values allowed</small>
                             </div>
                         </div>

@@ -139,6 +139,14 @@
                                         @endphp
                                         Low {{ implode(', ', $criticalUnits) }}
                                     </small>
+                                    <br>
+                                    <button class="btn btn-outline-primary btn-sm mt-1" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#sendMessageModal"
+                                            onclick="setProductForMessage({{ $product->id }}, '{{ $product->product_name }}', '{{ $product->brand }}')"
+                                            title="Send Message to Inventory">
+                                        <i class="bi bi-chat-dots"></i> Message
+                                    </button>
                                 </td>
                             </tr>
                             @endforeach
@@ -171,6 +179,7 @@
                                 <th class="small">Critical Level</th>
                                 <th class="small">Status</th>
                                 <th class="small">Last Updated</th>
+                                <th class="small">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -222,12 +231,60 @@
                                     <br>
                                     <small class="text-muted">{{ $product->updated_at ? \Carbon\Carbon::parse($product->updated_at)->format('H:i') : '' }}</small>
                                 </td>
+                                <td class="small">
+                                    <button class="btn btn-outline-primary btn-sm" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#sendMessageModal"
+                                            onclick="setProductForMessage({{ $product->id }}, '{{ $product->product_name }}', '{{ $product->brand }}')"
+                                            title="Send Message to Inventory">
+                                        <i class="bi bi-chat-dots"></i>
+                                    </button>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Send Message Modal -->
+<div class="modal fade" id="sendMessageModal" tabindex="-1" aria-labelledby="sendMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sendMessageModalLabel">
+                    <i class="bi bi-chat-dots"></i> Send Message to Inventory
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('admin.send-message') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <input type="hidden" id="message_product_id" name="product_id">
+                    
+                    <div class="mb-3">
+                        <label for="product_info" class="form-label">Product</label>
+                        <input type="text" class="form-control" id="product_info" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="message" name="message" rows="4" 
+                                  placeholder="Enter your message to the inventory team about this product..." 
+                                  required maxlength="1000"></textarea>
+                        <div class="form-text">Maximum 1000 characters</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Send Message
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -371,6 +428,12 @@
             `);
         });
     });
+
+    function setProductForMessage(productId, productName, brand) {
+        document.getElementById('message_product_id').value = productId;
+        document.getElementById('product_info').value = `${productName} (${brand})`;
+        document.getElementById('message').value = '';
+    }
 </script>
 
 <style>

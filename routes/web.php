@@ -39,6 +39,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/sales-report', [AdminController::class, 'salesReport'])->name('admin.sales-report');
         Route::get('/inventory-monitor', [AdminController::class, 'inventoryMonitor'])->name('admin.inventory-monitor');
+        Route::post('/send-message', [AdminController::class, 'sendMessage'])->name('admin.send-message');
+        Route::get('/messages', [AdminController::class, 'getMessages'])->name('admin.messages');
     });
 
     // Inventory Routes
@@ -51,6 +53,9 @@ Route::middleware(['role:inventory'])->prefix('inventory')->group(function () {
     Route::post('/stock-in', [InventoryController::class, 'stockIn'])->name('inventory.stock-in');
     Route::post('/stock-out', [InventoryController::class, 'stockOut'])->name('inventory.stock-out');
     Route::post('/report-critical/{product}', [InventoryController::class, 'reportCriticalLevel'])->name('inventory.report-critical');
+    Route::patch('/messages/{message}/read', [InventoryController::class, 'markMessageAsRead'])->name('inventory.message.read');
+    Route::patch('/messages/{message}/complete', [InventoryController::class, 'markMessageAsCompleted'])->name('inventory.message.complete');
+    Route::get('/messages', [InventoryController::class, 'getMessages'])->name('inventory.messages');
 });
 
    // Helper Routes

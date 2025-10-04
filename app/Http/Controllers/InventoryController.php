@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\InventoryTransaction;
 use App\Models\StockAlert;
+use App\Models\AdminMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -58,7 +59,7 @@ class InventoryController extends Controller
 
     public function products()
     {
-        $products = Product::with(['inventoryTransactions'])
+        $products = Product::with(['inventoryTransactions', 'adminMessages'])
             ->orderBy('product_name')
             ->paginate(25);
 
@@ -84,13 +85,20 @@ class InventoryController extends Controller
         // Get unique brands for filter
         $brands = Product::distinct()->pluck('brand')->sort();
 
+        // Get pending admin messages
+        $pendingMessages = AdminMessage::with(['product', 'admin'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('inventory.products', compact(
             'products',
             'totalProducts',
             'activeProducts',
             'criticalProducts',
             'outOfStockProducts',
-            'brands'
+            'brands',
+            'pendingMessages'
         ));
     }
 
@@ -109,9 +117,12 @@ class InventoryController extends Controller
         // Set is_active to true by default for new products
         $validated['is_active'] = true;
 
-        Product::create($validated);
-
-        return redirect()->route('inventory.products')->with('success', 'Product added successfully!');
+        try {
+            Product::create($validated);
+            return redirect()->route('inventory.products')->with('success', 'Product added successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to add product: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function updateProduct(Request $request, Product $product)
@@ -225,5 +236,26 @@ class InventoryController extends Controller
         ]);
 
         return response()->json(['success' => true]);
+    }
+
+    public function markMessageAsRead(AdminMessage $message)
+    {
+        $message->markAsRead();
+        return response()->json(['success' => true]);
+    }
+
+    public function markMessageAsCompleted(AdminMessage $message)
+    {
+        $message->markAsCompleted();
+        return response()->json(['success' => true]);
+    }
+
+    public function getMessages()
+    {
+        $messages = AdminMessage::with(['product', 'admin'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($messages);
     }
 }

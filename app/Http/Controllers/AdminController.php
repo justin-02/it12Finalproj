@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\StockAlert;
+use App\Models\AdminMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -78,7 +79,7 @@ class AdminController extends Controller
 
     public function inventoryMonitor()
     {
-        $products = Product::with(['inventoryTransactions'])->get();
+        $products = Product::with(['inventoryTransactions', 'adminMessages'])->get();
 
         // Filter critical products based on your rule: only check critical level for units that have stock
         $criticalProducts = $products->filter(function($product) {
@@ -86,5 +87,31 @@ class AdminController extends Controller
         });
 
         return view('admin.inventory-monitor', compact('products', 'criticalProducts'));
+    }
+
+    public function sendMessage(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'message' => 'required|string|max:1000'
+        ]);
+
+        AdminMessage::create([
+            'product_id' => $request->product_id,
+            'admin_id' => auth()->id(),
+            'message' => $request->message,
+            'status' => 'pending'
+        ]);
+
+        return redirect()->back()->with('success', 'Message sent to inventory team successfully!');
+    }
+
+    public function getMessages()
+    {
+        $messages = AdminMessage::with(['product', 'admin'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($messages);
     }
 }

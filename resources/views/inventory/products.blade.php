@@ -3,6 +3,20 @@
 @section('title', 'All Products - Inventory Management')
 
 @section('content')
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
 <div class="page-header">
     <h1 class="h2">
         <i class="bi bi-box-seam"></i> All Products
@@ -267,6 +281,57 @@
     </div>
 </div>
 
+<!-- Admin Messages Section -->
+@if($pendingMessages->count() > 0)
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-primary shadow-sm">
+            <div class="card-header bg-primary text-white py-2">
+                <h5 class="card-title mb-0 small fw-bold">
+                    <i class="bi bi-chat-dots"></i> Messages from Admin ({{ $pendingMessages->count() }})
+                </h5>
+            </div>
+            <div class="card-body p-3">
+                <div class="row">
+                    @foreach($pendingMessages as $message)
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 small fw-bold">
+                                        <i class="bi bi-exclamation-triangle"></i> {{ $message->product->product_name }} ({{ $message->product->brand }})
+                                    </h6>
+                                    <small>{{ $message->created_at->format('M d, Y H:i') }}</small>
+                                </div>
+                            </div>
+                            <div class="card-body p-3">
+                                <p class="mb-2 small">{{ $message->message }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">From: {{ $message->admin->name }}</small>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-success btn-sm" 
+                                                onclick="markAsRead({{ $message->id }})"
+                                                title="Mark as Read">
+                                            <i class="bi bi-check"></i> Read
+                                        </button>
+                                        <button class="btn btn-outline-primary btn-sm" 
+                                                onclick="markAsCompleted({{ $message->id }})"
+                                                title="Mark as Completed">
+                                            <i class="bi bi-check-circle"></i> Complete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <!-- Include Modals -->
 @include('inventory.partials.add-product-modal')
 @include('inventory.partials.stock-in-modal')
@@ -511,6 +576,50 @@
         printWindow.document.write(printContent);
         printWindow.document.close();
         printWindow.print();
+    }
+
+    function markAsRead(messageId) {
+        fetch(`/inventory/messages/${messageId}/read`, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error marking message as read');
+            }
+        })
+        .catch(error => {
+            alert('Error marking message as read');
+        });
+    }
+
+    function markAsCompleted(messageId) {
+        if (confirm('Mark this message as completed?')) {
+            fetch(`/inventory/messages/${messageId}/complete`, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error marking message as completed');
+                }
+            })
+            .catch(error => {
+                alert('Error marking message as completed');
+            });
+        }
     }
 </script>
 

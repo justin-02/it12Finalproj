@@ -32,6 +32,11 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function adminMessages()
+    {
+        return $this->hasMany(AdminMessage::class);
+    }
+
     public function getTotalStockAttribute()
     {
         return [
