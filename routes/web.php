@@ -41,6 +41,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/inventory-monitor', [AdminController::class, 'inventoryMonitor'])->name('admin.inventory-monitor');
         Route::post('/send-message', [AdminController::class, 'sendMessage'])->name('admin.send-message');
         Route::get('/messages', [AdminController::class, 'getMessages'])->name('admin.messages');
+        Route::get('/admin/sales/{id}', [App\Http\Controllers\Admin\SalesController::class, 'show'])->name('admin.sales.show');
+
     });
 
     // Inventory Routes

@@ -31,6 +31,7 @@
                             <div class="d-grid gap-2 d-md-block">
                                 <button type="submit" class="btn btn-primary btn-sm">Filter</button>
                                 <a href="{{ route('admin.sales-report') }}" class="btn btn-secondary btn-sm">Reset</a>
+                                <button type="button" class="btn btn-success btn-sm" onclick="printReport()">Print</button>
                             </div>
                         </div>
                     </div>
@@ -111,6 +112,7 @@
                                 <th class="small">Cash Received</th>
                                 <th class="small">Change</th>
                                 <th class="small">Date</th>
+                                <th class="small text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -126,9 +128,18 @@
                                     <small>{{ $order->created_at->format('M d, Y') }}</small><br>
                                     <small class="text-muted">{{ $order->created_at->format('H:i') }}</small>
                                 </td>
+                                <td class="small text-center">
+                                    <button type="button" class="btn btn-sm btn-info" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#viewSaleModal"
+                                            onclick="viewSale({{ $order->id }})">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
+
                         @if($sales->count() > 0)
                         <tfoot>
                             <tr class="table-success">
@@ -137,6 +148,7 @@
                                 <td class="small fw-bold">₱{{ number_format($sales->sum('cash_received'), 2) }}</td>
                                 <td class="small fw-bold">₱{{ number_format($sales->sum('change'), 2) }}</td>
                                 <td class="small fw-bold">{{ $totalTransactions }} transactions</td>
+                                <td class="small fw-bold"></td>
                             </tr>
                         </tfoot>
                         @endif
@@ -300,6 +312,32 @@
         printWindow.document.close();
         printWindow.print();
     }
+    function viewSale(orderId) {
+    // Show loading spinner
+    $('#saleDetailsContent').html(`
+        <div class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted small">Loading sale details...</p>
+        </div>
+    `);
+
+    // Fetch sale data from Laravel route
+    $.ajax({
+        url: `/admin/sales/${orderId}`,
+        method: 'GET',
+        success: function(response) {
+            $('#saleDetailsContent').html(response);
+        },
+        error: function() {
+            $('#saleDetailsContent').html(`
+                <div class="alert alert-danger small">Failed to load sale details. Please try again.</div>
+            `);
+        }
+    });
+}
+
 </script>
 
 <style>
@@ -325,5 +363,25 @@
         font-size: 0.75rem;
     }
 </style>
+<!-- View Sale Modal -->
+<div class="modal fade" id="viewSaleModal" tabindex="-1" aria-labelledby="viewSaleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white py-2">
+                <h5 class="modal-title small" id="viewSaleModalLabel">View Sale Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="saleDetailsContent" class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted small">Fetching sale details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endpush
 @endsection

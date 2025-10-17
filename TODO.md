@@ -1,0 +1,1 @@
+- [ ] Change the error message in stockOut method of InventoryController.php to "You entered a higher quantity than available"

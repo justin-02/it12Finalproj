@@ -206,7 +206,10 @@ class InventoryController extends Controller
 
             // Guard against negative inventory
             if ($sacksToDeduct > $product->current_stock_sacks || $piecesToDeduct > $product->current_stock_pieces) {
-                abort(400, 'Insufficient stock to perform stock out.');
+                $errorMessage = "Insufficient stock for {$product->product_name}! ";
+                $errorMessage .= "Requested: {$sacksToDeduct} sacks, {$piecesToDeduct} pieces. ";
+                $errorMessage .= "Available: {$product->current_stock_sacks} sacks, {$product->current_stock_pieces} pieces.";
+                abort(400, $errorMessage);
             }
 
             $product->current_stock_sacks -= $sacksToDeduct;

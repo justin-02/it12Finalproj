@@ -125,7 +125,7 @@
                         </thead>
                         <tbody>
                             @foreach($products as $product)
-                            <tr class="{{ $product->is_critical ? 'table-warning' : '' }}">
+                            <tr class="{{ $product->is_critical ? 'table-danger' : '' }}">
                                 <td>{{ $product->product_name }}</td>
                                 <td>{{ $product->brand }}</td>
                                 <td class="{{ $product->current_stock_sacks > 0 && $product->current_stock_sacks <= $product->critical_level_sacks ? 'text-danger fw-bold' : '' }}">

@@ -224,7 +224,7 @@
         opacity: 1;
     }
 
-    /* Responsive Design */
+    /* Responsive Design */A
     @media (max-width: 576px) {
         .modal-body-spaced {
             padding: 1.5rem 1rem;

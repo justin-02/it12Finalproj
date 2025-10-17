@@ -20,7 +20,7 @@
                         <div class="h5 mb-0 font-weight-bold text-gray-800">₱{{ number_format($todaySales, 2) }}</div>
                     </div>
                     <div class="col-auto">
-                        <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
+                        <i class="bi bi-currency fa-2x text-gray-300">₱</i>
                     </div>
                 </div>
             </div>
