@@ -50,10 +50,10 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                             Total Sales</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₱{{ number_format($totalSales, 2) }}</div>
+                        <div class=" h5 mb-0 font-weight-bold text-gray-800 text-end">₱{{ number_format($totalSales, 2) }}</div>
                     </div>
                     <div class="col-auto">
-                        <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
+                        <i class="bi bi-currency fa-2x text-gray-300">₱</i>
                     </div>
                 </div>
             </div>
@@ -66,7 +66,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                             Total Transactions</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $totalTransactions }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $totalTransactions }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-receipt fa-2x text-gray-300"></i>
@@ -82,7 +82,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                             Average Sale</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₱{{ number_format($averageSale, 2) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">₱{{ number_format($averageSale, 2) }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-graph-up fa-2x text-gray-300"></i>
@@ -108,10 +108,10 @@
                                 <th class="small">Order #</th>
                                 <th class="small">Cashier</th>
                                 <th class="small">Helper</th>
-                                <th class="small">Total Amount</th>
-                                <th class="small">Cash Received</th>
-                                <th class="small">Change</th>
-                                <th class="small">Date</th>
+                                <th class="text-end">Total Amount</th>
+                                <th class="text-end">Cash Received</th>
+                                <th class="text-end">Change</th>
+                                <th class="text-end">Date</th>
                                 <th class="small text-center">Action</th>
                             </tr>
                         </thead>
@@ -121,10 +121,10 @@
                                 <td class="small"><strong>{{ $order->order_number }}</strong></td>
                                 <td class="small">{{ $order->cashier->name }}</td>
                                 <td class="small">{{ $order->helper->name }}</td>
-                                <td class="small">₱{{ number_format($order->total_amount, 2) }}</td>
-                                <td class="small">₱{{ number_format($order->cash_received, 2) }}</td>
-                                <td class="small">₱{{ number_format($order->change, 2) }}</td>
-                                <td class="small">
+                                <td class="text-end">₱{{ number_format($order->total_amount, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($order->cash_received, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($order->change, 2) }}</td>
+                                <td class="text-end">
                                     <small>{{ $order->created_at->format('M d, Y') }}</small><br>
                                     <small class="text-muted">{{ $order->created_at->format('H:i') }}</small>
                                 </td>
@@ -144,11 +144,11 @@
                         <tfoot>
                             <tr class="table-success">
                                 <td colspan="3" class="text-end small fw-bold">Total:</td>
-                                <td class="small fw-bold">₱{{ number_format($totalSales, 2) }}</td>
-                                <td class="small fw-bold">₱{{ number_format($sales->sum('cash_received'), 2) }}</td>
-                                <td class="small fw-bold">₱{{ number_format($sales->sum('change'), 2) }}</td>
-                                <td class="small fw-bold">{{ $totalTransactions }} transactions</td>
-                                <td class="small fw-bold"></td>
+                                <td class="text-end small fw-bold">₱{{ number_format($totalSales, 2) }}</td>
+                                <td class="text-end small fw-bold">₱{{ number_format($sales->sum('cash_received'), 2) }}</td>
+                                <td class="text-end small fw-bold">₱{{ number_format($sales->sum('change'), 2) }}</td>
+                                <td class="text-end small fw-bold">{{ $totalTransactions }} transactions</td>
+                                <td class="text-end small fw-bold"></td>
                             </tr>
                         </tfoot>
                         @endif
@@ -364,24 +364,15 @@
     }
 </style>
 <!-- View Sale Modal -->
-<div class="modal fade" id="viewSaleModal" tabindex="-1" aria-labelledby="viewSaleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white py-2">
-                <h5 class="modal-title small" id="viewSaleModalLabel">View Sale Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="saleDetailsContent" class="text-center py-3">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2 text-muted small">Fetching sale details...</p>
-                </div>
-            </div>
-        </div>
+<!-- View Sale Modal -->
+<div class="modal fade" id="viewSaleModal" tabindex="-1" aria-labelledby="viewSaleLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" id="saleDetailsContent">
+      <!-- AJAX will load sale details here -->
     </div>
+  </div>
 </div>
+
 
 @endpush
 @endsection

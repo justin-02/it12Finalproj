@@ -10,73 +10,36 @@
 
 <!-- Summary Cards -->
 <div class="row mb-3">
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Total Products</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $products->count() }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-box-seam fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @php
+        $cardStats = [
+            ['title' => 'Total Products', 'value' => $products->count(), 'icon' => 'bi-box-seam', 'color' => 'primary'],
+            ['title' => 'Normal Stock', 'value' => $products->where('is_active', true)->where('is_critical', false)->count(), 'icon' => 'bi-check-circle', 'color' => 'success'],
+            ['title' => 'Critical Stock', 'value' => $products->where('is_critical', true)->count(), 'icon' => 'bi-exclamation-triangle', 'color' => 'warning'],
+            ['title' => 'Out of Stock', 'value' => $products->where('current_stock_sacks', '<=', 0)->where('current_stock_pieces', '<=', 0)->where('is_active', true)->count(), 'icon' => 'bi-x-circle', 'color' => 'danger']
+        ];
+    @endphp
 
+    @foreach($cardStats as $card)
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-success shadow h-100 py-2">
+        <div class="card border-left-{{ $card['color'] }} shadow h-100 py-2">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Normal Stock</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $products->where('is_active', true)->where('is_critical', false)->count() }}</div>
+                    <div class="col">
+                        <div class="text-xs font-weight-bold text-{{ $card['color'] }} text-uppercase mb-1 text-start">
+                            {{ $card['title'] }}
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">
+                            {{ $card['value'] }}
+                        </div>
                     </div>
                     <div class="col-auto">
-                        <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                        <i class="bi {{ $card['icon'] }} fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Critical Stock</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $products->where('is_critical', true)->count() }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Out of Stock</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $products->where('current_stock_sacks', '<=', 0)->where('current_stock_pieces', '<=', 0)->where('is_active', true)->count() }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-x-circle fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @endforeach
 </div>
 
 <!-- Critical Stock Alerts -->
@@ -94,39 +57,38 @@
                     <table class="table table-sm table-borderless mb-0">
                         <thead>
                             <tr>
-                                <th class="small">Product</th>
-                                <th class="small">Brand</th>
-                                <th class="small">Stock (Sacks)</th>
-                                <th class="small">Stock (Pieces)</th>
-                                <th class="small">Critical Level</th>
-                                <th class="small">Status</th>
+                                <th class="small text-start">Product</th>
+                                <th class="small text-start">Brand</th>
+                                <th class="small text-end">Stock (Sacks)</th>
+                                <th class="small text-end">Stock (Pieces)</th>
+                                <th class="small text-end">Critical Level</th>
+                                <th class="small text-start">Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($products->where('is_critical', true) as $product)
                             <tr class="critical-stock">
-                                <td class="small">
+                                <td class="small text-start">
                                     <strong>{{ $product->product_name }}</strong>
                                     <i class="bi bi-exclamation-triangle text-warning ms-1" title="Critical Stock"></i>
                                 </td>
-                                <td class="small">{{ $product->brand }}</td>
-                                <td class="small text-danger fw-bold">
+                                <td class="small text-start">{{ $product->brand }}</td>
+                                <td class="small text-danger fw-bold text-end">
                                     @php
                                         $isWholeSacks = fmod((float)$product->current_stock_sacks, 1.0) == 0.0;
                                     @endphp
                                     {{ $isWholeSacks ? number_format($product->current_stock_sacks, 0) : rtrim(rtrim(number_format($product->current_stock_sacks, 2, '.', ''), '0'), '.') }}
                                     <br><small class="text-muted">({{ number_format($product->current_stock_sacks * 50, 0) }} kg)</small>
                                 </td>
-                                <td class="small text-danger fw-bold">
+                                <td class="small text-danger fw-bold text-end">
                                     {{ $product->current_stock_pieces }}
                                 </td>
-                                <td class="small">
+                                <td class="small text-end">
                                     <small>Sacks: <span class="fw-bold">{{ $product->critical_level_sacks }}</span></small><br>
                                     <small>Pieces: <span class="fw-bold">{{ $product->critical_level_pieces }}</span></small>
                                 </td>
-                                <td class="small">
-                                    <span class="badge bg-warning">Critical</span>
-                                    <br>
+                                <td class="small text-start">
+                                    <span class="badge bg-warning">Critical</span><br>
                                     <small class="text-muted">
                                         @php
                                             $criticalUnits = [];
@@ -138,13 +100,11 @@
                                             }
                                         @endphp
                                         Low {{ implode(', ', $criticalUnits) }}
-                                    </small>
-                                    <br>
-                                    <button class="btn btn-outline-primary btn-sm mt-1" 
-                                            data-bs-toggle="modal" 
+                                    </small><br>
+                                    <button class="btn btn-outline-primary btn-sm mt-1"
+                                            data-bs-toggle="modal"
                                             data-bs-target="#sendMessageModal"
-                                            onclick="setProductForMessage({{ $product->id }}, '{{ $product->product_name }}', '{{ $product->brand }}')"
-                                            title="Send Message to Inventory">
+                                            onclick="setProductForMessage({{ $product->id }}, '{{ $product->product_name }}', '{{ $product->brand }}')">
                                         <i class="bi bi-chat-dots"></i> Message
                                     </button>
                                 </td>
@@ -171,49 +131,43 @@
                     <table class="table table-sm table-striped table-hover" id="inventoryTable">
                         <thead class="table-dark">
                             <tr>
-                                <th class="small">Product Name</th>
-                                <th class="small">Brand</th>
-                                <th class="small">Price</th>
-                                <th class="small">Stock (Sacks)</th>
-                                <th class="small">Stock (Pieces)</th>
-                                <th class="small">Critical Level</th>
-                                <th class="small">Status</th>
-                                <th class="small">Last Updated</th>
-                                <th class="small">Actions</th>
+                                <th class="small text-start">Product Name</th>
+                                <th class="small text-start">Brand</th>
+                                <th class="small text-end">Price</th>
+                                <th class="small text-end">Stock (Sacks)</th>
+                                <th class="small text-end">Stock (Pieces)</th>
+                                <th class="small text-end">Critical Level</th>
+                                <th class="small text-start">Status</th>
+                                <th class="small text-end">Last Updated</th>
+                                <th class="small text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($products as $product)
                             <tr class="{{ $product->is_critical ? 'table-warning' : '' }} {{ !$product->is_active ? 'table-secondary' : '' }}">
-                                <td class="small">
+                                <td class="small text-start">
                                     <strong>{{ $product->product_name }}</strong>
                                     @if($product->is_critical)
-                                        <i class="bi bi-exclamation-triangle text-warning ms-1" title="Critical Stock"></i>
+                                        <i class="bi bi-exclamation-triangle text-warning ms-1"></i>
                                     @endif
                                 </td>
-                                <td class="small">{{ $product->brand }}</td>
-                                <td class="small">₱{{ number_format($product->price, 2) }}</td>
-                                <td class="small {{ $product->current_stock_sacks > 0 && $product->current_stock_sacks <= $product->critical_level_sacks ? 'text-danger fw-bold' : '' }}">
+                                <td class="small text-start">{{ $product->brand }}</td>
+                                <td class="small text-end">₱{{ number_format($product->price, 2) }}</td>
+                                <td class="small text-end {{ $product->current_stock_sacks > 0 && $product->current_stock_sacks <= $product->critical_level_sacks ? 'text-danger fw-bold' : '' }}">
                                     @php
                                         $isWholeSacks = fmod((float)$product->current_stock_sacks, 1.0) == 0.0;
                                     @endphp
                                     {{ $isWholeSacks ? number_format($product->current_stock_sacks, 0) : rtrim(rtrim(number_format($product->current_stock_sacks, 2, '.', ''), '0'), '.') }}
                                     <br><small class="text-muted">({{ number_format($product->current_stock_sacks * 50, 0) }} kg)</small>
-                                    @if($product->current_stock_sacks > 0 && $product->current_stock_sacks <= $product->critical_level_sacks)
-                                        <i class="bi bi-exclamation-triangle text-danger" title="Critical Sacks"></i>
-                                    @endif
                                 </td>
-                                <td class="small {{ $product->current_stock_pieces > 0 && $product->current_stock_pieces <= $product->critical_level_pieces ? 'text-danger fw-bold' : '' }}">
+                                <td class="small text-end {{ $product->current_stock_pieces > 0 && $product->current_stock_pieces <= $product->critical_level_pieces ? 'text-danger fw-bold' : '' }}">
                                     {{ $product->current_stock_pieces }}
-                                    @if($product->current_stock_pieces > 0 && $product->current_stock_pieces <= $product->critical_level_pieces)
-                                        <i class="bi bi-exclamation-triangle text-danger" title="Critical Pieces"></i>
-                                    @endif
                                 </td>
-                                <td class="small">
+                                <td class="small text-end">
                                     <small>Sacks: <span class="fw-bold">{{ $product->critical_level_sacks }}</span></small><br>
                                     <small>Pieces: <span class="fw-bold">{{ $product->critical_level_pieces }}</span></small>
                                 </td>
-                                <td class="small">
+                                <td class="small text-start">
                                     @if($product->is_active)
                                         @if($product->current_stock_sacks <= 0 && $product->current_stock_pieces <= 0)
                                             <span class="badge bg-danger">Out of Stock</span>
@@ -226,17 +180,15 @@
                                         <span class="badge bg-secondary">Inactive</span>
                                     @endif
                                 </td>
-                                <td class="small">
-                                    <small>{{ $product->updated_at ? \Carbon\Carbon::parse($product->updated_at)->format('M d, Y') : 'N/A' }}</small>
-                                    <br>
+                                <td class="small text-end">
+                                    <small>{{ $product->updated_at ? \Carbon\Carbon::parse($product->updated_at)->format('M d, Y') : 'N/A' }}</small><br>
                                     <small class="text-muted">{{ $product->updated_at ? \Carbon\Carbon::parse($product->updated_at)->format('H:i') : '' }}</small>
                                 </td>
-                                <td class="small">
-                                    <button class="btn btn-outline-primary btn-sm" 
-                                            data-bs-toggle="modal" 
+                                <td class="small text-center">
+                                    <button class="btn btn-outline-primary btn-sm"
+                                            data-bs-toggle="modal"
                                             data-bs-target="#sendMessageModal"
-                                            onclick="setProductForMessage({{ $product->id }}, '{{ $product->product_name }}', '{{ $product->brand }}')"
-                                            title="Send Message to Inventory">
+                                            onclick="setProductForMessage({{ $product->id }}, '{{ $product->product_name }}', '{{ $product->brand }}')">
                                         <i class="bi bi-chat-dots"></i>
                                     </button>
                                 </td>

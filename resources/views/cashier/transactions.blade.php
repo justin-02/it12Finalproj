@@ -23,10 +23,10 @@
                                     <th width="12%">Helper</th>
                                     <th width="12%">Cashier</th>
                                     <th width="15%">Items</th>
-                                    <th width="10%">Total Amount</th>
-                                    <th width="12%">Cash Received</th>
-                                    <th width="8%">Change</th>
-                                    <th width="15%">Date</th>
+                                    <th class="text-end" width="10%">Total Amount</th>
+                                    <th class="text-end" width="12%">Cash Received</th>
+                                    <th class="text-end" width="8%">Change</th>
+                                    <th class="text-end" width="15%">Date</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -54,10 +54,10 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="text-nowrap">₱{{ number_format($transaction->total_amount, 2) }}</td>
-                                    <td class="text-nowrap">₱{{ number_format($transaction->cash_received, 2) }}</td>
-                                    <td class="text-nowrap">₱{{ number_format($transaction->change, 2) }}</td>
-                                    <td>{{ $transaction->created_at->format('M d, Y H:i') }}</td>
+                                    <td class="text-nowrap text-end">₱{{ number_format($transaction->total_amount, 2) }}</td>
+                                    <td class="text-nowrap text-end">₱{{ number_format($transaction->cash_received, 2) }}</td>
+                                    <td class="text-nowrap text-end">₱{{ number_format($transaction->change, 2) }}</td>
+                                    <td class="text-end">{{ $transaction->created_at->format('M d, Y H:i') }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>

@@ -19,7 +19,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                             Total Products</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $totalProducts }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $totalProducts }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-box-seam fa-2x text-gray-300"></i>
@@ -36,7 +36,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                             Critical Stocks</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $criticalProducts }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $criticalProducts }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
@@ -53,7 +53,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                             In Stock Items</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $inStockProducts }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $inStockProducts }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-check-circle fa-2x text-gray-300"></i>
@@ -70,7 +70,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                             Low Stock Items</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $lowStockProducts }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $lowStockProducts }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-exclamation-circle fa-2x text-gray-300"></i>
@@ -167,9 +167,9 @@
                             <tr>
                                 <th class="small">Product</th>
                                 <th class="small">Type</th>
-                                <th class="small">Sacks</th>
-                                <th class="small">Pieces</th>
-                                <th class="small">Kilos</th>
+                                <th class="text-end">Sacks</th>
+                                <th class="text-end">Pieces</th>
+                                <th class="text-end">Kilos</th>
                                 <th class="small">Date</th>
                                 <th class="small">User</th>
                             </tr>
@@ -177,16 +177,16 @@
                         <tbody>
                             @foreach($recentTransactions as $transaction)
                             <tr>
-                                <td class="small">{{ $transaction->product->product_name }}</td>
-                                <td class="small">
+                                <td class="text-start">{{ $transaction->product->product_name }}</td>
+                                <td class="text-start">
                                     <span class="badge bg-{{ $transaction->type == 'stock-in' ? 'success' : ($transaction->type == 'stock-out' ? 'danger' : 'warning') }}">
                                         {{ ucfirst($transaction->type) }}
                                     </span>
                                 </td>
-                                <td class="small">{{ $transaction->quantity_sacks }}</td>
-                                <td class="small">{{ $transaction->quantity_pieces }}</td>
-                                <td class="small">{{ $transaction->quantity_kilos }}</td>
-                                <td class="small">
+                                <td class="text-end">{{ $transaction->quantity_sacks }}</td>
+                                <td class="text-end">{{ $transaction->quantity_pieces }}</td>
+                                <td class="text-end">{{ $transaction->quantity_kilos }}</td>
+                                <td class="text-start">
                                     <small>{{ $transaction->created_at->format('M d, Y') }}</small><br>
                                     <small class="text-muted">{{ $transaction->created_at->format('H:i') }}</small>
                                 </td>

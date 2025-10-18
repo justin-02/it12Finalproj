@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') - Agrivet Supply System</title>
-    
+    <nav class="navbar navbar-light bg-transparent mb-3 d-md-none">
+    <button id="sidebarToggle" class="btn btn-outline-success">
+        <i class="bi bi-list"></i> Menu
+    </button>
+    </nav>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -301,6 +305,32 @@
                 margin-left: 0;
             }
         }
+
+
+        .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    z-index: 1050;
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Hidden by default on mobile */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+}
+
     </style>
 </head>
 <body>
@@ -325,5 +355,16 @@
     <script src="{{ asset('js/inventory.js') }}"></script>
     
     @stack('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.querySelector('.sidebar');
+        const toggleBtn = document.getElementById('sidebarToggle');
+
+        toggleBtn?.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+        });
+    });
+</script>
+
 </body>
 </html>

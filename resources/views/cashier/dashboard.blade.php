@@ -17,10 +17,10 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                             Today's Sales</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₱{{ number_format($todaySales, 2) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">₱{{ number_format($todaySales, 2) }}</div>
                     </div>
                     <div class="col-auto">
-                        <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
+                        <i class="bi bi-currency fa-2x text-gray-300">₱</i>
                     </div>
                 </div>
             </div>
@@ -34,7 +34,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                             Today's Transactions</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $todayTransactions }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $todayTransactions }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-receipt fa-2x text-gray-300"></i>
@@ -51,7 +51,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                             Pending Orders</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $pendingOrdersCount }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $pendingOrdersCount }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-clock fa-2x text-gray-300"></i>
@@ -68,7 +68,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                             Weekly Sales</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₱{{ number_format($weeklySales, 2) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">₱{{ number_format($weeklySales, 2) }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-graph-up fa-2x text-gray-300"></i>
@@ -119,7 +119,7 @@
                                                 <div class="d-flex justify-content-between border-bottom pb-1 mb-1">
                                                     <span>
                                                         {{ $item->product->product_name }}<br>
-                                                        <small class="text-muted">{{ $item->product->brand }}</small>
+                                                        <small class="text-muted ">{{ $item->product->brand }}</small>
                                                     </span>
                                                     <span>
                                                         @php
@@ -185,10 +185,10 @@
                                     <th>Order #</th>
                                     <th>Helper</th>
                                     <th>Cashier</th>
-                                    <th>Total Amount</th>
-                                    <th>Cash Received</th>
-                                    <th>Change</th>
-                                    <th>Date</th>
+                                    <th class="text-end">Total Amount</th>
+                                    <th class="text-end">Cash Received</th>
+                                    <th class="text-end">Change</th>
+                                    <th class="text-end">Date</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -197,10 +197,10 @@
                                     <td>{{ $transaction->order_number }}</td>
                                     <td>{{ $transaction->helper->name }}</td>
                                     <td>{{ $transaction->cashier->name }}</td>
-                                    <td>₱{{ number_format($transaction->total_amount, 2) }}</td>
-                                    <td>₱{{ number_format($transaction->cash_received, 2) }}</td>
-                                    <td>₱{{ number_format($transaction->change, 2) }}</td>
-                                    <td>{{ $transaction->created_at->format('M d, Y H:i') }}</td>
+                                    <td class="text-end">₱{{ number_format($transaction->total_amount, 2) }}</td>
+                                    <td class="text-end">₱{{ number_format($transaction->cash_received, 2) }}</td>
+                                    <td class="text-end">₱{{ number_format($transaction->change, 2) }}</td>
+                                    <td class="text-end">{{ $transaction->created_at->format('M d, Y H:i') }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>

@@ -43,7 +43,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                             Total Products</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $totalProducts }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $totalProducts }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-box-seam fa-2x text-gray-300"></i>
@@ -60,7 +60,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                             Active Products</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $activeProducts }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $activeProducts }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-check-circle fa-2x text-gray-300"></i>
@@ -77,7 +77,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                             Critical Stock</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $criticalProducts }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $criticalProducts }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
@@ -94,7 +94,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                             Out of Stock</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $outOfStockProducts }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $outOfStockProducts }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-x-circle fa-2x text-gray-300"></i>
@@ -163,12 +163,12 @@
                         <th class="small">#</th>
                         <th class="small">Product Name</th>
                         <th class="small">Brand</th>
-                        <th class="small">Price</th>
-                        <th class="small">Stock (Sacks)</th>
-                        <th class="small">Stock (Pieces)</th>
+                        <th class="text-end">Price</th>
+                        <th class="text-end">Stock (Sacks)</th>
+                        <th class="text-end">Stock (Pieces)</th>
                         <th class="small">Critical Level</th>
                         <th class="small">Status</th>
-                        <th class="small">Last Updated</th>
+                        <th class="text-end">Last Updated</th>
                         <th class="small">Actions</th>    
                     </tr>
                 </thead>
@@ -183,18 +183,18 @@
                             @endif
                         </td>
                         <td class="small">{{ $product->brand }}</td>
-                        <td class="small">₱{{ number_format($product->price, 2) }}</td>
-                        <td class="small {{ $product->current_stock_sacks > 0 && $product->current_stock_sacks <= $product->critical_level_sacks ? 'text-danger fw-bold' : '' }}">
+                        <td class="text-end">₱{{ number_format($product->price, 2) }}</td>
+                        <td class="text-end {{ $product->current_stock_sacks > 0 && $product->current_stock_sacks <= $product->critical_level_sacks ? 'text-danger fw-bold' : '' }}">
                             @php
                                 $isWholeSacks = fmod((float)$product->current_stock_sacks, 1.0) == 0.0;
                             @endphp
                             {{ $isWholeSacks ? number_format($product->current_stock_sacks, 0) : rtrim(rtrim(number_format($product->current_stock_sacks, 2, '.', ''), '0'), '.') }}
-                            <br><small class="text-muted">({{ number_format($product->current_stock_sacks * 50, 0) }} kg)</small>
+                            <br><small class="text-end">({{ number_format($product->current_stock_sacks * 50, 0) }} kg)</small>
                             @if($product->current_stock_sacks > 0 && $product->current_stock_sacks <= $product->critical_level_sacks)
                                 <i class="bi bi-exclamation-triangle text-danger" title="Critical Sacks"></i>
                             @endif
                         </td>
-                        <td class="small {{ $product->current_stock_pieces > 0 && $product->current_stock_pieces <= $product->critical_level_pieces ? 'text-danger fw-bold' : '' }}">
+                        <td class="text-end {{ $product->current_stock_pieces > 0 && $product->current_stock_pieces <= $product->critical_level_pieces ? 'text-danger fw-bold' : '' }}">
                             {{ $product->current_stock_pieces }}
                             @if($product->current_stock_pieces > 0 && $product->current_stock_pieces <= $product->critical_level_pieces)
                                 <i class="bi bi-exclamation-triangle text-danger" title="Critical Pieces"></i>
@@ -219,7 +219,7 @@
                                 <span class="badge bg-secondary">Inactive</span>
                             @endif
                         </td>
-                        <td class="small">
+                        <td class="text-end">
                             <small>{{ $product->updated_at ? \Carbon\Carbon::parse($product->updated_at)->format('M d, Y') : 'N/A' }}</small>
                             <br>
                             <small class="text-muted">{{ $product->updated_at ? \Carbon\Carbon::parse($product->updated_at)->format('H:i') : '' }}</small>

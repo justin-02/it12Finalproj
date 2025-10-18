@@ -6,6 +6,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\HelperController;
 use App\Http\Controllers\CashierController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SalesController;
 
 
 Route::get('/', function () {
@@ -41,7 +42,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/inventory-monitor', [AdminController::class, 'inventoryMonitor'])->name('admin.inventory-monitor');
         Route::post('/send-message', [AdminController::class, 'sendMessage'])->name('admin.send-message');
         Route::get('/messages', [AdminController::class, 'getMessages'])->name('admin.messages');
-        Route::get('/admin/sales/{id}', [App\Http\Controllers\Admin\SalesController::class, 'show'])->name('admin.sales.show');
+
+        Route::get('/sales-report', [SalesController::class, 'index'])->name('admin.sales-report');
+        Route::get('/sales/{id}', [SalesController::class, 'show'])->name('admin.sales.show');
+        
+
 
     });
 

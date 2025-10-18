@@ -16,8 +16,15 @@
                         <select class="form-control-enhanced" id="stock_out_product_id" name="product_id" required>
                             <option value="">Select Product</option>
                             @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->product_name }} - {{ $product->brand }}</option>
+                            <option 
+                                value="{{ $product->id }}" 
+                                data-name="{{ $product->product_name }}"
+                                data-sacks="{{ $product->current_stock_sacks }}" 
+                                data-pieces="{{ $product->current_stock_pieces }}">
+                                {{ $product->product_name }} - {{ $product->brand }}
+                            </option>
                             @endforeach
+
                         </select>
                     </div>
                     

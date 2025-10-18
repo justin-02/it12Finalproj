@@ -116,9 +116,9 @@
                             <tr>
                                 <th>Product Name</th>
                                 <th>Brand</th>
-                                <th>Stock (Sacks)</th>
-                                <th>Stock (Pieces)</th>
-                                <th>Price per Sack</th>
+                                <th class="text-end">Stock (Sacks)</th>
+                                <th class="text-end">Stock (Pieces)</th>
+                                <th class="text-end">Price per Sack</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -128,7 +128,7 @@
                             <tr class="{{ $product->is_critical ? 'table-danger' : '' }}">
                                 <td>{{ $product->product_name }}</td>
                                 <td>{{ $product->brand }}</td>
-                                <td class="{{ $product->current_stock_sacks > 0 && $product->current_stock_sacks <= $product->critical_level_sacks ? 'text-danger fw-bold' : '' }}">
+                                <td class="{{ $product->current_stock_sacks > 0 && $product->current_stock_sacks <= $product->critical_level_sacks ? 'text-danger fw-bold' : '' }} text-end">
                                     @php
                                         $isWholeSacks = fmod((float)$product->current_stock_sacks, 1.0) == 0.0;
                                     @endphp
@@ -138,13 +138,13 @@
                                         <i class="bi bi-exclamation-triangle text-danger"></i>
                                     @endif
                                 </td>
-                                <td class="{{ $product->current_stock_pieces > 0 && $product->current_stock_pieces <= $product->critical_level_pieces ? 'text-danger fw-bold' : '' }}">
+                                <td class="{{ $product->current_stock_pieces > 0 && $product->current_stock_pieces <= $product->critical_level_pieces ? 'text-danger fw-bold' : '' }} text-end">
                                     {{ $product->current_stock_pieces }}
                                     @if($product->current_stock_pieces > 0 && $product->current_stock_pieces <= $product->critical_level_pieces)
                                         <i class="bi bi-exclamation-triangle text-danger"></i>
                                     @endif
                                 </td>
-                                <td>₱{{ number_format($product->price, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($product->price, 2) }}</td>
                                 <td>
                                     @if($product->is_active)
                                         @if($product->is_critical)
