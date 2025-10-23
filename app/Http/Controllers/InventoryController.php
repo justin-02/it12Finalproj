@@ -8,6 +8,9 @@ use App\Models\StockAlert;
 use App\Models\AdminMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\ProductBatch;
+
+
 
 class InventoryController extends Controller
 {
@@ -206,11 +209,13 @@ class InventoryController extends Controller
 
             // Guard against negative inventory
             if ($sacksToDeduct > $product->current_stock_sacks || $piecesToDeduct > $product->current_stock_pieces) {
-                $errorMessage = "Insufficient stock for {$product->product_name}! ";
-                $errorMessage .= "Requested: {$sacksToDeduct} sacks, {$piecesToDeduct} pieces. ";
-                $errorMessage .= "Available: {$product->current_stock_sacks} sacks, {$product->current_stock_pieces} pieces.";
-                abort(400, $errorMessage);
+                return redirect()->back()->with('error', 
+                    "⚠️ Insufficient stock for {$product->product_name}! ".
+                    "Requested: {$sacksToDeduct} sacks, {$piecesToDeduct} pieces. ".
+                    "Available: {$product->current_stock_sacks} sacks, {$product->current_stock_pieces} pieces."
+                );
             }
+
 
             $product->current_stock_sacks -= $sacksToDeduct;
             $product->current_stock_pieces -= $piecesToDeduct;
@@ -261,4 +266,23 @@ class InventoryController extends Controller
 
         return response()->json($messages);
     }
+    public function recentStockIns()
+    {
+        $stockIns = InventoryTransaction::with(['product', 'user'])
+            ->where('type', 'stock-in')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('admin.recent-stockins', compact('stockIns'));
+    }
+    public function getProductBatches($productId)
+{
+    $batches = ProductBatch::where('product_id', $productId)
+        ->orderBy('date_received', 'desc')
+        ->get(['batch_number', 'quantity_sacks', 'quantity_pieces', 'date_received', 'expiry_date', 'supplier']);
+
+    return response()->json($batches);
+}
+    
+
 }

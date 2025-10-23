@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::table('inventory_transactions', function (Blueprint $table) {
             $table->enum('type', ['stock-in', 'stock-out', 'adjustment', 'sale'])->change();
+            $table->unsignedBigInteger('batch_id')->nullable();
+            $table->foreign('batch_id')->references('id')->on('product_batches')->onDelete('set null');
+
         });
     }
 

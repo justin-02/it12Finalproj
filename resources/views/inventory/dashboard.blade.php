@@ -315,7 +315,7 @@
                         </div>
                     </div>
                     <div class="mb-2">
-                        <label for="notes" class="form-label small fw-bold">Notes (Optional)</label>
+                        <label for="notes" class="form-label small fw-bold">Delivered by</label>
                         <textarea class="form-control form-control-sm" id="notes" name="notes" rows="2"></textarea>
                     </div>
                 </div>
@@ -329,6 +329,7 @@
 </div>
 
 <!-- Stock Out Modal -->
+<!-- Stock Out Modal -->
 <div class="modal fade" id="stockOutModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -336,7 +337,7 @@
                 <h5 class="modal-title h6">Stock Out - Deduct Inventory</h5>
                 <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ route('inventory.stock-out') }}">
+            <form method="POST" action="{{ route('inventory.stock-out') }}" id="stockOutForm">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-2">
@@ -344,24 +345,38 @@
                         <select class="form-control form-control-sm" id="stock_out_product_id" name="product_id" required>
                             <option value="">Select Product</option>
                             @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->product_name }} - {{ $product->brand }}</option>
+                            <option 
+                                value="{{ $product->id }}"
+                                data-stock-sacks="{{ $product->current_stock_sacks }}"
+                                data-stock-pieces="{{ $product->current_stock_pieces }}"
+                            >
+                                {{ $product->product_name }} - {{ $product->brand }}
+                            </option>
                             @endforeach
                         </select>
                     </div>
+
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <div class="mb-2">
+                            <div class="mb-2 position-relative">
                                 <label for="quantity_out_sacks" class="form-label small fw-bold">Quantity (Sacks)</label>
                                 <input type="number" class="form-control form-control-sm" id="quantity_out_sacks" name="quantity_sacks" value="0" min="0">
+                                <div id="sackWarning" class="text-danger small mt-1 d-none">
+                                    <i class="bi bi-exclamation-triangle"></i> Exceeds available stock!
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-2">
+                            <div class="mb-2 position-relative">
                                 <label for="quantity_out_pieces" class="form-label small fw-bold">Quantity (Pieces)</label>
                                 <input type="number" class="form-control form-control-sm" id="quantity_out_pieces" name="quantity_pieces" value="0" min="0">
+                                <div id="pieceWarning" class="text-danger small mt-1 d-none">
+                                    <i class="bi bi-exclamation-triangle"></i> Exceeds available stock!
+                                </div>
                             </div>
                         </div>
                     </div>
+
                     <div class="mb-2">
                         <label for="notes_out" class="form-label small fw-bold">Notes (Optional)</label>
                         <textarea class="form-control form-control-sm" id="notes_out" name="notes" rows="2"></textarea>
@@ -372,15 +387,62 @@
                 </div>
                 <div class="modal-footer py-2">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger btn-sm">Deduct Stock</button>
+                    <button type="submit" class="btn btn-danger btn-sm" id="submitStockOut">Deduct Stock</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+
 @push('scripts')
 <script>
+    // Stock Out live validation
+document.addEventListener('DOMContentLoaded', function() {
+    const productSelect = document.getElementById('stock_out_product_id');
+    const sackInput = document.getElementById('quantity_out_sacks');
+    const pieceInput = document.getElementById('quantity_out_pieces');
+    const sackWarning = document.getElementById('sackWarning');
+    const pieceWarning = document.getElementById('pieceWarning');
+    const submitBtn = document.getElementById('submitStockOut');
+
+    let currentSackStock = 0;
+    let currentPieceStock = 0;
+
+    // Update stock levels when a product is selected
+    productSelect.addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        currentSackStock = parseFloat(selected.getAttribute('data-stock-sacks')) || 0;
+        currentPieceStock = parseInt(selected.getAttribute('data-stock-pieces')) || 0;
+        sackWarning.classList.add('d-none');
+        pieceWarning.classList.add('d-none');
+        sackInput.value = 0;
+        pieceInput.value = 0;
+    });
+
+    // Validate sack quantity
+    sackInput.addEventListener('input', function() {
+        if (parseFloat(this.value) > currentSackStock) {
+            sackWarning.classList.remove('d-none');
+            submitBtn.disabled = true;
+        } else {
+            sackWarning.classList.add('d-none');
+            if (pieceWarning.classList.contains('d-none')) submitBtn.disabled = false;
+        }
+    });
+
+    // Validate piece quantity
+    pieceInput.addEventListener('input', function() {
+        if (parseInt(this.value) > currentPieceStock) {
+            pieceWarning.classList.remove('d-none');
+            submitBtn.disabled = true;
+        } else {
+            pieceWarning.classList.add('d-none');
+            if (sackWarning.classList.contains('d-none')) submitBtn.disabled = false;
+        }
+    });
+});
+
     function reportCriticalLevel(productId) {
         if (confirm('Report this product as critical stock to admin?')) {
             fetch(`/inventory/report-critical/${productId}`, {

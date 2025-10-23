@@ -45,9 +45,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/sales-report', [SalesController::class, 'index'])->name('admin.sales-report');
         Route::get('/sales/{id}', [SalesController::class, 'show'])->name('admin.sales.show');
-        
-
-
+        Route::get('/admin/recent-stockins', [InventoryController::class, 'recentStockIns'])->name('admin.recent-stockins');
     });
 
     // Inventory Routes

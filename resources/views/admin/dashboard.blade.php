@@ -169,6 +169,7 @@
                                     <th class="py-3 px-3 text-end">Total Amount</th>
                                     <th class="py-3 px-3 text-center">Items</th>
                                     <th class="py-3 px-3 text-end">Date</th>
+                                    <th class="py-3 px-3 text-end">action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -190,6 +191,14 @@
                                         <small>{{ $order->created_at->format('M d, Y') }}</small><br>
                                         <small>{{ $order->created_at->format('H:i') }}</small>
                                     </td>
+                                <td class="small text-center">
+                                    <button type="button" class="btn btn-sm btn-info" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#viewSaleModal"
+                                            onclick="viewSale({{ $order->id }})">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                </td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -204,5 +213,41 @@
             </div>
         </div>
     </div>
+</div>
+
+<script>
+    function viewSale(orderId) {
+    // Show loading spinner
+    $('#saleDetailsContent').html(`
+        <div class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted small">Loading sale details...</p>
+        </div>
+    `);
+
+    // Fetch sale data from Laravel route
+    $.ajax({
+        url: `/admin/sales/${orderId}`,
+        method: 'GET',
+        success: function(response) {
+            $('#saleDetailsContent').html(response);
+        },
+        error: function() {
+            $('#saleDetailsContent').html(`
+                <div class="alert alert-danger small">Failed to load sale details. Please try again.</div>
+            `);
+        }
+    });
+}
+</script>
+<!-- View Sale Modal -->
+<div class="modal fade" id="viewSaleModal" tabindex="-1" aria-labelledby="viewSaleLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" id="saleDetailsContent">
+      <!-- AJAX will load sale details here -->
+    </div>
+  </div>
 </div>
 @endsection

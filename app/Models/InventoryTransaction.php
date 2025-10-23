@@ -10,8 +10,16 @@ class InventoryTransaction extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id', 'type', 'quantity_sacks', 'quantity_pieces',
-        'quantity_kilos', 'reference_type', 'reference_id', 'notes', 'user_id'
+        'product_id',
+        'batch_id', // ✅ new
+        'type',
+        'quantity_sacks',
+        'quantity_pieces',
+        'quantity_kilos',
+        'reference_type',
+        'reference_id',
+        'notes',
+        'user_id'
     ];
 
     protected $casts = [
@@ -27,5 +35,10 @@ class InventoryTransaction extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function batch()
+    {
+        return $this->belongsTo(ProductBatch::class);
     }
 }

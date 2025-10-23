@@ -38,8 +38,8 @@
                     </div>
                     
                     <div class="form-group-enhanced">
-                        <label for="notes" class="form-label-enhanced">Notes (Optional)</label>
-                        <textarea class="form-control-enhanced" id="notes" name="notes" rows="2" placeholder="Add any notes about this stock in..."></textarea>
+                        <label for="notes" class="form-label-enhanced">Delivered by</label>
+                        <textarea class="form-control-enhanced" id="notes" name="notes" rows="2"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer modal-footer-enhanced">

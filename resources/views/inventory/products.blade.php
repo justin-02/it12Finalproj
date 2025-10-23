@@ -174,7 +174,9 @@
                 </thead>
                 <tbody>
                     @foreach($products as $product)
-                    <tr class="{{ $product->is_critical ? 'table-warning' : '' }} {{ !$product->is_active ? 'table-secondary' : '' }}">
+                    <tr class="{{ !$product->is_active ? 'table-secondary' : '' }}
+                        {{ ($product->current_stock_sacks <= 0 && $product->current_stock_pieces <= 0) ? 'table-danger' : '' }}
+                        {{ ($product->is_critical && ($product->current_stock_sacks > 0 || $product->current_stock_pieces > 0)) ? 'table-warning' : '' }}">
                         <td class="small">{{ $loop->iteration }}</td>
                         <td class="small">
                             <strong>{{ $product->product_name }}</strong>

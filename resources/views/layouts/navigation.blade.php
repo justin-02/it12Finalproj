@@ -42,6 +42,15 @@
                         <span>Inventory Monitor</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ Request::is('admin/recent-stock-in') ? 'active' : '' }}" 
+                    href="{{ route('admin.recent-stockins') }}">
+                        <i class="bi bi-truck"></i>
+                        <span>Product Arrived</span>
+                    </a>
+                </li>
+
+
             @elseif(auth()->user()->isInventory())
                 <li class="nav-item">
                     <a class="nav-link {{ Request::is('inventory/dashboard') ? 'active' : '' }}" href="{{ route('inventory.dashboard') }}">

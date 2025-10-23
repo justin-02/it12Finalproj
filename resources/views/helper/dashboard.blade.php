@@ -124,11 +124,17 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($products as $product)
-                            <tr class="{{ $product->is_critical ? 'table-danger' : '' }}">
+                           @foreach($products as $product)
+                            @php
+                                $isOutOfStock = $product->current_stock_sacks <= 0 && $product->current_stock_pieces <= 0;
+                                $isLowStock = $product->is_critical && !$isOutOfStock;
+                            @endphp
+
+                            <tr class="{{ $isOutOfStock ? 'table-danger' : ($isLowStock ? 'table-warning' : '') }}">
                                 <td>{{ $product->product_name }}</td>
                                 <td>{{ $product->brand }}</td>
-                                <td class="{{ $product->current_stock_sacks > 0 && $product->current_stock_sacks <= $product->critical_level_sacks ? 'text-danger fw-bold' : '' }} text-end">
+
+                                <td class="text-end">
                                     @php
                                         $isWholeSacks = fmod((float)$product->current_stock_sacks, 1.0) == 0.0;
                                     @endphp
@@ -138,33 +144,38 @@
                                         <i class="bi bi-exclamation-triangle text-danger"></i>
                                     @endif
                                 </td>
-                                <td class="{{ $product->current_stock_pieces > 0 && $product->current_stock_pieces <= $product->critical_level_pieces ? 'text-danger fw-bold' : '' }} text-end">
+
+                                <td class="text-end">
                                     {{ $product->current_stock_pieces }}
                                     @if($product->current_stock_pieces > 0 && $product->current_stock_pieces <= $product->critical_level_pieces)
                                         <i class="bi bi-exclamation-triangle text-danger"></i>
                                     @endif
                                 </td>
+
                                 <td class="text-end">₱{{ number_format($product->price, 2) }}</td>
+
                                 <td>
-                                    @if($product->is_active)
-                                        @if($product->is_critical)
-                                            <span class="badge bg-warning">Low Stock</span>
-                                        @else
-                                            <span class="badge bg-success">In Stock</span>
-                                        @endif
+                                    @if($isOutOfStock)
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    @elseif($isLowStock)
+                                        <span class="badge bg-warning">Low Stock</span>
                                     @else
-                                        <span class="badge bg-secondary">Out of Stock</span>
+                                        <span class="badge bg-success">In Stock</span>
                                     @endif
                                 </td>
+
                                 <td>
-                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" 
-                                            data-bs-target="#prepareOrderModal" 
-                                            onclick="setProductForOrder({{ $product->id }}, '{{ $product->product_name }} - {{ $product->brand }}', {{ $product->current_stock_sacks }}, {{ $product->current_stock_pieces }}, {{ $product->price }})">
+                                    <button class="btn btn-sm btn-primary"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#prepareOrderModal"
+                                            onclick="setProductForOrder({{ $product->id }}, '{{ $product->product_name }} - {{ $product->brand }}', {{ $product->current_stock_sacks }}, {{ $product->current_stock_pieces }}, {{ $product->price }})"
+                                            {{ $isOutOfStock ? 'disabled' : '' }}>
                                         <i class="bi bi-cart-plus"></i> Add to Order
                                     </button>
                                 </td>
                             </tr>
-                            @endforeach
+                        @endforeach
+
                         </tbody>
                     </table>
                 </div>

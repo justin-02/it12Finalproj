@@ -144,7 +144,7 @@
                         </thead>
                         <tbody>
                             @foreach($products as $product)
-                            <tr class="{{ $product->is_critical ? 'table-warning' : '' }} {{ !$product->is_active ? 'table-secondary' : '' }}">
+                            <tr class="{{ $product->is_critical ? 'table-warning' : '' }}  {{ !$product->is_active ? 'table-secondary' : '' }} {{ ($product->current_stock_sacks <= 0 && $product->current_stock_pieces <= 0 && $product->is_active) ? 'table-danger' : '' }}">
                                 <td class="small text-start">
                                     <strong>{{ $product->product_name }}</strong>
                                     @if($product->is_critical)

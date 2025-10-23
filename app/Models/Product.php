@@ -44,6 +44,11 @@ class Product extends Model
             'pieces' => $this->current_stock_pieces
         ];
     }
+        public function batches()
+    {
+        return $this->hasMany(ProductBatch::class);
+    }
+
 
     // Updated to only check critical level for units that have stock
     public function getIsCriticalAttribute()
