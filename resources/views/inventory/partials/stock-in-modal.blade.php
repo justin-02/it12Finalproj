@@ -13,41 +13,81 @@
                 <div class="modal-body modal-body-spaced">
                     <div class="form-group-enhanced">
                         <label for="stock_product_id" class="form-label-enhanced">Product <span class="text-danger">*</span></label>
-                        <select class="form-control-enhanced" id="stock_product_id" name="product_id" required>
+                        <select class="form-control-enhanced" id="stock_product_id" name="product_id" required onchange="updateExpirationDays()">
                             <option value="">Select Product</option>
                             @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->product_name }} - {{ $product->brand }}</option>
+                            <option value="{{ $product->id }}" data-expiration-days="{{ $product->expiration_days }}">{{ $product->product_name }} - {{ $product->brand }}</option>
                             @endforeach
                         </select>
                     </div>
-                    
+                    <div class="form-group-enhanced">
+                        <label for="quantity" class="form-label-enhanced">Quantity (Sacks) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control-enhanced" id="quantity" name="quantity" value="1" min="1" step="1" required placeholder="0">
+                        <small class="form-hint"><i class="bi bi-info-circle me-1"></i>Enter number of sacks to stock in</small>
+                    </div>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group-enhanced">
-                                <label for="quantity_sacks" class="form-label-enhanced">Quantity (Sacks)</label>
-                                <input type="number" class="form-control-enhanced" id="quantity_sacks" name="quantity_sacks" value="0" min="0" step="0.01" placeholder="0.00">
-                                <small class="form-hint"><i class="bi bi-info-circle me-1"></i>Supports decimal (e.g., 2.5 sacks)</small>
+                                <label for="restock_date" class="form-label-enhanced">Restock Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control-enhanced" id="restock_date" name="restock_date" value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}" required onchange="autoCalculateExpiry()">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group-enhanced">
-                                <label for="quantity_pieces" class="form-label-enhanced">Quantity (Pieces)</label>
-                                <input type="number" class="form-control-enhanced" id="quantity_pieces" name="quantity_pieces" value="0" min="0" placeholder="0">
+                                <label for="expiry_date" class="form-label-enhanced">Expiry Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control-enhanced" id="expiry_date" name="expiry_date" required readonly tabindex="-1">
+                                <small class="form-hint" id="expiry_hint"></small>
                             </div>
                         </div>
                     </div>
-                    
                     <div class="form-group-enhanced">
-                        <label for="notes" class="form-label-enhanced">Delivered by</label>
+                        <!-- Batch code is auto-generated and hidden from the form -->
+                    </div>
+                    <div class="form-group-enhanced">
+                        <label for="supplier" class="form-label-enhanced">Supplier</label>
+                        <input type="text" class="form-control-enhanced" id="supplier" name="supplier" placeholder="Optional">
+                    </div>
+                    <div class="form-group-enhanced">
+                        <label for="notes" class="form-label-enhanced">Notes</label>
                         <textarea class="form-control-enhanced" id="notes" name="notes" rows="2"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer modal-footer-enhanced">
                     <button type="button" class="btn btn-secondary-enhanced" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary-green">
-                        <i class="bi bi-arrow-down-circle me-2"></i>Add Stock
+                        <i class="bi bi-arrow-down-circle me-2"></i>Add Stock & Batch
                     </button>
                 </div>
+</form>
+<script>
+function updateExpirationDays() {
+    const select = document.getElementById('stock_product_id');
+    const selected = select.options[select.selectedIndex];
+    const expirationDays = selected.getAttribute('data-expiration-days');
+    document.getElementById('restock_date').setAttribute('data-expiration-days', expirationDays);
+    autoCalculateExpiry();
+}
+function autoCalculateExpiry() {
+    const restockDate = document.getElementById('restock_date').value;
+    const select = document.getElementById('stock_product_id');
+    const selected = select.options[select.selectedIndex];
+    const expirationDays = parseInt(selected.getAttribute('data-expiration-days') || '0');
+    if (restockDate && expirationDays > 0) {
+        const restock = new Date(restockDate);
+        restock.setDate(restock.getDate() + expirationDays);
+        const yyyy = restock.getFullYear();
+        const mm = String(restock.getMonth() + 1).padStart(2, '0');
+        const dd = String(restock.getDate()).padStart(2, '0');
+        document.getElementById('expiry_date').value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById('expiry_hint').innerText = `Auto: ${expirationDays} days from restock date.`;
+    } else {
+        document.getElementById('expiry_hint').innerText = '';
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    updateExpirationDays();
+});
+</script>
             </form>
         </div>
     </div>

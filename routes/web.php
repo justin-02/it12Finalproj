@@ -37,15 +37,16 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin Routes
     Route::middleware(['role:admin'])->prefix('admin')->group(function () {
-        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-        Route::get('/sales-report', [AdminController::class, 'salesReport'])->name('admin.sales-report');
-        Route::get('/inventory-monitor', [AdminController::class, 'inventoryMonitor'])->name('admin.inventory-monitor');
-        Route::post('/send-message', [AdminController::class, 'sendMessage'])->name('admin.send-message');
-        Route::get('/messages', [AdminController::class, 'getMessages'])->name('admin.messages');
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/sales-report', [AdminController::class, 'salesReport'])->name('admin.sales-report');
+    Route::get('/inventory-monitor', [AdminController::class, 'inventoryMonitor'])->name('admin.inventory-monitor');
+    Route::post('/send-message', [AdminController::class, 'sendMessage'])->name('admin.send-message');
+    Route::get('/messages', [AdminController::class, 'getMessages'])->name('admin.messages');
 
-        Route::get('/sales-report', [SalesController::class, 'index'])->name('admin.sales-report');
-        Route::get('/sales/{id}', [SalesController::class, 'show'])->name('admin.sales.show');
-        Route::get('/admin/recent-stockins', [InventoryController::class, 'recentStockIns'])->name('admin.recent-stockins');
+    Route::get('/sales-report', [SalesController::class, 'index'])->name('admin.sales-report');
+    Route::get('/sales/{id}', [SalesController::class, 'show'])->name('admin.sales.show');
+    Route::get('/admin/recent-stockins', [InventoryController::class, 'recentStockIns'])->name('admin.recent-stockins');
+    Route::get('/batches', [InventoryController::class, 'batches'])->name('admin.batches');
     });
 
     // Inventory Routes
@@ -61,6 +62,7 @@ Route::middleware(['role:inventory'])->prefix('inventory')->group(function () {
     Route::patch('/messages/{message}/read', [InventoryController::class, 'markMessageAsRead'])->name('inventory.message.read');
     Route::patch('/messages/{message}/complete', [InventoryController::class, 'markMessageAsCompleted'])->name('inventory.message.complete');
     Route::get('/messages', [InventoryController::class, 'getMessages'])->name('inventory.messages');
+    Route::get('/batches', [InventoryController::class, 'batches'])->name('inventory.batches');
 });
 
    // Helper Routes

@@ -26,6 +26,11 @@
                             </div>
                         </div>
                     </div>
+                    <div class="form-group-enhanced">
+                        <label for="edit_expiration_days" class="form-label-enhanced">Expiration Days <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control-enhanced" id="edit_expiration_days" name="expiration_days" min="1" required placeholder="e.g. 365" value="{{ old('expiration_days', isset($product) ? $product->expiration_days : '') }}">
+                        <small class="form-hint"><i class="bi bi-info-circle me-1"></i>Number of days before product expires (e.g. 365 for 1 year)</small>
+                    </div>
                     
                     <div class="form-group-enhanced">
                         <label for="edit_price" class="form-label-enhanced">Price (₱) <span class="text-danger">*</span></label>

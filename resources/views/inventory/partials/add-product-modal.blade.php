@@ -15,15 +15,18 @@
                         <label for="product_name" class="form-label-enhanced">Product Name <span class="text-danger"></span></label>
                         <input type="text" class="form-control-enhanced" id="product_name" name="product_name" required placeholder="Enter product name">
                     </div>
-                    
                     <div class="form-group-enhanced">
                         <label for="brand" class="form-label-enhanced">Brand <span class="text-danger"></span></label>
                         <input type="text" class="form-control-enhanced" id="brand" name="brand" required placeholder="Enter brand name">
                     </div>
-                    
                     <div class="form-group-enhanced">
                         <label for="price" class="form-label-enhanced">Price (₱) <span class="text-danger"></span></label>
                         <input type="number" step="0.01" class="form-control-enhanced" id="price" name="price" required placeholder="0.00">
+                    </div>
+                    <div class="form-group-enhanced">
+                        <label for="expiration_days" class="form-label-enhanced">Expiration Days <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control-enhanced" id="expiration_days" name="expiration_days" value="365" min="1" required placeholder="e.g. 365">
+                        <small class="form-hint"><i class="bi bi-info-circle me-1"></i>Number of days before product expires (e.g. 365 for 1 year)</small>
                     </div>
                     
                     <div class="row g-3">

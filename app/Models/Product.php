@@ -11,7 +11,7 @@ class Product extends Model
 
     protected $fillable = [
         'product_name', 'brand', 'price', 'current_stock_sacks', 
-        'current_stock_pieces', 'critical_level_sacks', 'critical_level_pieces', 'is_active'
+        'current_stock_pieces', 'critical_level_sacks', 'critical_level_pieces', 'is_active', 'expiration_days'
     ];
 
     protected $casts = [
@@ -44,9 +44,9 @@ class Product extends Model
             'pieces' => $this->current_stock_pieces
         ];
     }
-        public function batches()
+    public function batches()
     {
-        return $this->hasMany(ProductBatch::class);
+        return $this->hasMany(Batch::class);
     }
 
 

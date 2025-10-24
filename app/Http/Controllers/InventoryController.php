@@ -68,7 +68,6 @@ class InventoryController extends Controller
 
         $totalProducts = Product::count();
         $activeProducts = Product::where('is_active', true)->count();
-        
         $criticalProducts = Product::where('is_active', true)
             ->where(function($query) {
                 $query->where(function($q) {
@@ -79,21 +78,16 @@ class InventoryController extends Controller
                       ->where('current_stock_pieces', '<=', DB::raw('critical_level_pieces'));
                 });
             })->count();
-
         $outOfStockProducts = Product::where('is_active', true)
             ->where('current_stock_sacks', '<=', 0)
             ->where('current_stock_pieces', '<=', 0)
             ->count();
-
-        // Get unique brands for filter
         $brands = Product::distinct()->pluck('brand')->sort();
-
-        // Get pending admin messages
         $pendingMessages = AdminMessage::with(['product', 'admin'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->get();
-
+        $batches = \App\Models\Batch::with('product')->orderBy('restock_date', 'desc')->take(10)->get();
         return view('inventory.products', compact(
             'products',
             'totalProducts',
@@ -101,7 +95,8 @@ class InventoryController extends Controller
             'criticalProducts',
             'outOfStockProducts',
             'brands',
-            'pendingMessages'
+            'pendingMessages',
+            'batches'
         ));
     }
 
@@ -115,6 +110,7 @@ class InventoryController extends Controller
             'current_stock_pieces' => 'required|integer|min:0',
             'critical_level_sacks' => 'required|numeric|min:0.01',
             'critical_level_pieces' => 'required|integer|min:1',
+            'expiration_days' => 'required|integer|min:1',
         ]);
 
         // Set is_active to true by default for new products
@@ -138,6 +134,7 @@ class InventoryController extends Controller
             'current_stock_pieces' => 'required|integer|min:0',
             'critical_level_sacks' => 'required|numeric|min:0.01',
             'critical_level_pieces' => 'required|integer|min:1',
+            'expiration_days' => 'required|integer|min:1',
             'is_active' => 'sometimes|boolean',
         ]);
 
@@ -161,35 +158,59 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'quantity_sacks' => 'required|numeric|min:0',
-            'quantity_pieces' => 'required|integer|min:0',
+            'quantity' => 'required|numeric|min:1',
+            'restock_date' => 'required|date',
+            'expiry_date' => 'nullable|date|after_or_equal:restock_date',
+            'supplier' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($validated) {
             $product = Product::findOrFail($validated['product_id']);
-            
-            $sacksToAdd = (float) $validated['quantity_sacks'];
-            $kilosLogged = $sacksToAdd * 50; // for audit trail only
 
-            // Update stock
-            $product->current_stock_sacks += $sacksToAdd;
-            $product->current_stock_pieces += $validated['quantity_pieces'];
+            // Update stock (assume quantity is in sacks for now)
+            $product->current_stock_sacks += $validated['quantity'];
             $product->save();
+
+            // Auto-increment batch code globally
+            $lastBatch = \App\Models\Batch::orderByDesc('id')->first();
+            $nextNumber = 1;
+            if ($lastBatch && preg_match('/^BATCH-(\d+)$/', $lastBatch->batch_code, $matches)) {
+                $nextNumber = intval($matches[1]) + 1;
+            }
+            $batchCode = 'BATCH-' . $nextNumber;
+
+            // Compute expiry date if not provided
+            $expiryDate = $validated['expiry_date'] ?? null;
+            if (!$expiryDate) {
+                $restockDate = \Carbon\Carbon::parse($validated['restock_date']);
+                $expiryDate = $restockDate->copy()->addDays($product->expiration_days)->format('Y-m-d');
+            }
+
+            // Create batch record
+            \App\Models\Batch::create([
+                'product_id' => $product->id,
+                'batch_code' => $batchCode,
+                'quantity' => $validated['quantity'],
+                'restock_date' => $validated['restock_date'],
+                'expiry_date' => $expiryDate,
+                'supplier' => $validated['supplier'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+            ]);
 
             // Create transaction record
             InventoryTransaction::create([
                 'product_id' => $product->id,
                 'type' => 'stock-in',
-                'quantity_sacks' => $sacksToAdd,
-                'quantity_pieces' => $validated['quantity_pieces'],
-                'quantity_kilos' => $kilosLogged,
+                'quantity_sacks' => $validated['quantity'],
+                'quantity_pieces' => 0,
+                'quantity_kilos' => $validated['quantity'] * 50,
                 'notes' => $validated['notes'] ?? null,
                 'user_id' => auth()->id()
             ]);
         });
 
-        return redirect()->back()->with('success', 'Stock added successfully!');
+        return redirect()->back()->with('success', 'Stock and batch added successfully!');
     }
 
     public function stockOut(Request $request)
@@ -276,13 +297,34 @@ class InventoryController extends Controller
         return view('admin.recent-stockins', compact('stockIns'));
     }
     public function getProductBatches($productId)
-{
-    $batches = ProductBatch::where('product_id', $productId)
-        ->orderBy('date_received', 'desc')
-        ->get(['batch_number', 'quantity_sacks', 'quantity_pieces', 'date_received', 'expiry_date', 'supplier']);
+    {
+        $batches = ProductBatch::where('product_id', $productId)
+            ->orderBy('date_received', 'desc')
+            ->get(['batch_number', 'quantity_sacks', 'quantity_pieces', 'date_received', 'expiry_date', 'supplier']);
 
-    return response()->json($batches);
-}
-    
+        return response()->json($batches);
+    }
 
+    /**
+     * Show all batches for batch list UI.
+     */
+    public function batches(Request $request)
+    {
+        $query = \App\Models\Batch::with('product');
+        if ($request->filled('product_id')) {
+            $query->where('product_id', $request->product_id);
+        }
+        if ($request->filled('status')) {
+            $today = now()->toDateString();
+            if ($request->status === 'expired') {
+                $query->where('expiry_date', '<', $today);
+            } elseif ($request->status === 'active') {
+                $query->where('expiry_date', '>=', $today);
+            }
+        }
+        // Always order by latest restock_date first
+        $batches = $query->orderByDesc('restock_date')->paginate(25);
+        $products = Product::orderBy('product_name')->get();
+        return view('inventory.batches', compact('batches', 'products'));
+    }
 }

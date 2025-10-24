@@ -49,6 +49,12 @@
                         <span>Product Arrived</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ Request::is('admin/batches') ? 'active' : '' }}" href="{{ route('admin.batches') }}">
+                        <i class="bi bi-archive"></i>
+                        <span>Batch List</span>
+                    </a>
+                </li>
 
 
             @elseif(auth()->user()->isInventory())
@@ -62,6 +68,12 @@
                     <a class="nav-link {{ Request::is('inventory/products') ? 'active' : '' }}" href="{{ route('inventory.products') }}">
                         <i class="bi bi-box-seam"></i>
                         <span>Products</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ Request::is('inventory/batches') ? 'active' : '' }}" href="{{ route('inventory.batches') }}">
+                        <i class="bi bi-archive"></i>
+                        <span>Batch List</span>
                     </a>
                 </li>
                 <li class="nav-item">
