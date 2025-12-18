@@ -1,4 +1,4 @@
-<!-- Stock In Modal -->
+<!-- Stock In Modal with Pieces Support -->
 <div class="modal fade" id="stockInModal" tabindex="-1" aria-labelledby="stockInModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content modal-card">
@@ -16,15 +16,50 @@
                         <select class="form-control-enhanced" id="stock_product_id" name="product_id" required onchange="updateExpirationDays()">
                             <option value="">Select Product</option>
                             @foreach($products as $product)
-                            <option value="{{ $product->id }}" data-expiration-days="{{ $product->expiration_days }}">{{ $product->product_name }} - {{ $product->brand }}</option>
+                            <option value="{{ $product->id }}" 
+                                    data-expiration-days="{{ $product->expiration_days }}"
+                                    data-sacks="{{ $product->current_stock_sacks }}"
+                                    data-pieces="{{ $product->current_stock_pieces }}">
+                                {{ $product->product_name }} - {{ $product->brand }}
+                            </option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="form-group-enhanced">
-                        <label for="quantity" class="form-label-enhanced">Quantity (Sacks) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control-enhanced" id="quantity" name="quantity" value="1" min="1" step="1" required placeholder="0">
-                        <small class="form-hint"><i class="bi bi-info-circle me-1"></i>Enter number of sacks to stock in</small>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group-enhanced">
+                                <label for="quantity_sacks" class="form-label-enhanced">Quantity (Sacks) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control-enhanced" id="quantity_sacks" name="quantity_sacks" value="0" min="0" step="0.01" required placeholder="0.00">
+                                <small class="form-hint"><i class="bi bi-info-circle me-1"></i>Supports decimal (e.g., 2.5 sacks)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group-enhanced">
+                                <label for="quantity_pieces" class="form-label-enhanced">Quantity (Pieces)</label>
+                                <input type="number" class="form-control-enhanced" id="quantity_pieces" name="quantity_pieces" value="0" min="0" placeholder="0">
+                                <small class="form-hint"><i class="bi bi-info-circle me-1"></i>Individual pieces count</small>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <!-- Current Stock Display -->
+                    <div class="alert-enhanced alert-info-enhanced mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-box-seam me-2"></i>
+                                <small class="fw-medium">
+                                    <strong>Current Stock:</strong> 
+                                    <span id="current_sacks_display">0</span> sacks, 
+                                    <span id="current_pieces_display">0</span> pieces
+                                </small>
+                            </div>
+                            <div>
+                                <small class="text-muted" id="total_kilos_display">0 kg</small>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group-enhanced">
@@ -40,235 +75,205 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-group-enhanced">
-                        <!-- Batch code is auto-generated and hidden from the form -->
-                    </div>
+                    
                     <div class="form-group-enhanced">
                         <label for="supplier" class="form-label-enhanced">Supplier</label>
                         <input type="text" class="form-control-enhanced" id="supplier" name="supplier" placeholder="Optional">
                     </div>
+                    
                     <div class="form-group-enhanced">
                         <label for="notes" class="form-label-enhanced">Notes</label>
-                        <textarea class="form-control-enhanced" id="notes" name="notes" rows="2"></textarea>
+                        <textarea class="form-control-enhanced" id="notes" name="notes" rows="2" placeholder="Add notes about this stock in..."></textarea>
+                    </div>
+                    
+                    <!-- New Stock Summary -->
+                    <div class="alert-enhanced alert-success-enhanced mt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-plus-circle me-2"></i>
+                                <small class="fw-medium">
+                                    <strong>New Stock After Add:</strong> 
+                                    <span id="new_sacks_display">0</span> sacks, 
+                                    <span id="new_pieces_display">0</span> pieces
+                                </small>
+                            </div>
+                            <div>
+                                <small class="text-muted" id="new_kilos_display">0 kg</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                
                 <div class="modal-footer modal-footer-enhanced">
                     <button type="button" class="btn btn-secondary-enhanced" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary-green">
-                        <i class="bi bi-arrow-down-circle me-2"></i>Add Stock & Batch
+                        <i class="bi bi-arrow-down-circle me-2"></i>Add Stock
                     </button>
                 </div>
-</form>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize when page loads
+    updateExpirationDays();
+    updateCurrentStockDisplay();
+    
+    // Add event listeners for quantity inputs
+    document.getElementById('quantity_sacks').addEventListener('input', updateStockCalculations);
+    document.getElementById('quantity_pieces').addEventListener('input', updateStockCalculations);
+});
+
 function updateExpirationDays() {
     const select = document.getElementById('stock_product_id');
     const selected = select.options[select.selectedIndex];
     const expirationDays = selected.getAttribute('data-expiration-days');
     document.getElementById('restock_date').setAttribute('data-expiration-days', expirationDays);
     autoCalculateExpiry();
+    updateCurrentStockDisplay();
 }
+
+function updateCurrentStockDisplay() {
+    const select = document.getElementById('stock_product_id');
+    const selected = select.options[select.selectedIndex];
+    
+    if (selected.value) {
+        const currentSacks = parseFloat(selected.getAttribute('data-sacks') || 0);
+        const currentPieces = parseInt(selected.getAttribute('data-pieces') || 0);
+        
+        // Display current stock
+        document.getElementById('current_sacks_display').textContent = currentSacks.toFixed(2);
+        document.getElementById('current_pieces_display').textContent = currentPieces;
+        
+        // Calculate total kilos (50kg per sack)
+        const totalKilos = (currentSacks * 50).toFixed(1);
+        document.getElementById('total_kilos_display').textContent = totalKilos + ' kg';
+        
+        // Update new stock calculations
+        updateStockCalculations();
+    } else {
+        // Reset displays if no product selected
+        document.getElementById('current_sacks_display').textContent = '0';
+        document.getElementById('current_pieces_display').textContent = '0';
+        document.getElementById('total_kilos_display').textContent = '0 kg';
+        document.getElementById('new_sacks_display').textContent = '0';
+        document.getElementById('new_pieces_display').textContent = '0';
+        document.getElementById('new_kilos_display').textContent = '0 kg';
+    }
+}
+
+function updateStockCalculations() {
+    const select = document.getElementById('stock_product_id');
+    const selected = select.options[select.selectedIndex];
+    
+    if (selected.value) {
+        const currentSacks = parseFloat(selected.getAttribute('data-sacks') || 0);
+        const currentPieces = parseInt(selected.getAttribute('data-pieces') || 0);
+        const addSacks = parseFloat(document.getElementById('quantity_sacks').value) || 0;
+        const addPieces = parseInt(document.getElementById('quantity_pieces').value) || 0;
+        
+        // Calculate new totals
+        const newSacks = currentSacks + addSacks;
+        const newPieces = currentPieces + addPieces;
+        
+        // Display new stock
+        document.getElementById('new_sacks_display').textContent = newSacks.toFixed(2);
+        document.getElementById('new_pieces_display').textContent = newPieces;
+        
+        // Calculate new kilos
+        const newKilos = (newSacks * 50).toFixed(1);
+        document.getElementById('new_kilos_display').textContent = newKilos + ' kg';
+    }
+}
+
 function autoCalculateExpiry() {
     const restockDate = document.getElementById('restock_date').value;
     const select = document.getElementById('stock_product_id');
     const selected = select.options[select.selectedIndex];
     const expirationDays = parseInt(selected.getAttribute('data-expiration-days') || '0');
+    
     if (restockDate && expirationDays > 0) {
         const restock = new Date(restockDate);
         restock.setDate(restock.getDate() + expirationDays);
+        
+        // Format date as YYYY-MM-DD
         const yyyy = restock.getFullYear();
         const mm = String(restock.getMonth() + 1).padStart(2, '0');
         const dd = String(restock.getDate()).padStart(2, '0');
+        
         document.getElementById('expiry_date').value = `${yyyy}-${mm}-${dd}`;
         document.getElementById('expiry_hint').innerText = `Auto: ${expirationDays} days from restock date.`;
     } else {
+        document.getElementById('expiry_date').value = '';
         document.getElementById('expiry_hint').innerText = '';
     }
 }
-document.addEventListener('DOMContentLoaded', function() {
-    updateExpirationDays();
-});
 </script>
-            </form>
-        </div>
-    </div>
-</div>
 
 <style>
-    /* Modal Container Classes */
-    .modal-card {
-        border-radius: 16px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-        border: none;
-        overflow: hidden;
-    }
+/* Additional styles for the new elements */
 
-    .modal-header-green {
-        background: linear-gradient(135deg, #2d5a3d 0%, #4a7c59 100%);
-        border-bottom: none;
-        padding: 1.25rem 1.5rem;
-    }
+/* Alert enhancements */
+.alert-enhanced {
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    border: none;
+    margin-bottom: 0;
+}
 
-    .modal-body-spaced {
-        padding: 2rem 1.5rem;
-    }
+.alert-info-enhanced {
+    background-color: #e8f4fd;
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
 
-    .modal-footer-enhanced {
-        background-color: #f8f9fa;
-        border-top: 1px solid #e9ecef;
-        padding: 1.25rem 1.5rem;
-        border-bottom-left-radius: 16px;
-        border-bottom-right-radius: 16px;
-    }
+.alert-success-enhanced {
+    background-color: #e8f5e8;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
 
-    /* Form Component Classes */
-    .form-group-enhanced {
-        margin-bottom: 1.5rem;
-        position: relative;
-    }
+.alert-warning-enhanced {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
 
-    .form-label-enhanced {
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-        display: block;
-    }
+/* Quantity input improvements */
+.form-control-enhanced[type="number"]::-webkit-inner-spin-button,
+.form-control-enhanced[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+    height: 2em;
+}
 
-    .form-control-enhanced {
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 0.75rem 1rem;
-        font-size: 0.95rem;
-        background-color: #ffffff;
-        transition: all 0.3s ease;
-        width: 100%;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .row.g-3 {
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
     }
+    
+    .row.g-3 > [class*="col-"] {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .alert-enhanced {
+        padding: 0.625rem 0.75rem;
+        font-size: 0.875rem;
+    }
+}
 
-    .form-control-enhanced:focus {
-        border-color: #4a7c59;
-        box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.1);
-        transform: translateY(-2px);
-    }
+/* Animation for stock updates */
+@keyframes pulseUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
 
-    /* Style specifically for select elements */
-    .form-control-enhanced select {
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-        background-position: right 0.75rem center;
-        background-repeat: no-repeat;
-        background-size: 16px 12px;
-        padding-right: 2.5rem;
-    }
-
-    /* Style specifically for textarea */
-    .form-control-enhanced textarea {
-        resize: vertical;
-        min-height: 80px;
-    }
-
-    .form-hint {
-        color: #718096;
-        font-size: 0.8rem;
-        margin-top: 0.5rem;
-        display: block;
-    }
-
-    /* Button Classes */
-    .btn-primary-green {
-        background: linear-gradient(135deg, #2d5a3d 0%, #4a7c59 100%);
-        border: none;
-        color: white;
-        font-weight: 600;
-        padding: 0.75rem 1.5rem;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        font-size: 0.9rem;
-    }
-
-    .btn-primary-green:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(45, 90, 61, 0.3);
-        color: white;
-    }
-
-    .btn-secondary-enhanced {
-        background-color: #ffffff;
-        border: 2px solid #e2e8f0;
-        color: #4a5568;
-        font-weight: 600;
-        padding: 0.75rem 1.5rem;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        font-size: 0.9rem;
-    }
-
-    .btn-secondary-enhanced:hover {
-        background-color: #f7fafc;
-        border-color: #cbd5e0;
-        transform: translateY(-2px);
-        color: #4a5568;
-    }
-
-    /* Modal Animations */
-    .modal.fade .modal-card {
-        transform: translateY(-30px) scale(0.95);
-        opacity: 0;
-        transition: all 0.3s ease;
-    }
-
-    .modal.show .modal-card {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 576px) {
-        .modal-body-spaced {
-            padding: 1.5rem 1rem;
-        }
-        
-        .modal-header-green,
-        .modal-footer-enhanced {
-            padding: 1rem 1rem;
-        }
-        
-        .form-control-enhanced {
-            padding: 0.625rem 0.875rem;
-        }
-        
-        .row.g-3 {
-            margin-left: -0.5rem;
-            margin-right: -0.5rem;
-        }
-        
-        .row.g-3 > [class*="col-"] {
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-        }
-    }
-
-    /* Focus States for Accessibility */
-    .form-control-enhanced:focus-visible {
-        outline: 2px solid #4a7c59;
-        outline-offset: 2px;
-    }
-
-    .btn-primary-green:focus-visible,
-    .btn-secondary-enhanced:focus-visible {
-        outline: 2px solid #4a7c59;
-        outline-offset: 2px;
-    }
-
-    /* Enhanced select dropdown styling */
-    .form-control-enhanced option {
-        padding: 0.5rem;
-        border-radius: 8px;
-    }
-
-    /* Smooth transitions for all interactive elements */
-    .form-control-enhanced,
-    .btn-primary-green,
-    .btn-secondary-enhanced {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+.pulse {
+    animation: pulseUpdate 0.3s ease-in-out;
+}
 </style>

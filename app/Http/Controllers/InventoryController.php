@@ -7,11 +7,11 @@ use App\Models\InventoryTransaction;
 use App\Models\StockAlert;
 use App\Models\AdminMessage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
-use App\Models\ProductBatch;
-
-
-
+use App\Models\Task;
+use App\Models\EmployeeLog;
+use App\Services\EmployeeMetricsService;
 class InventoryController extends Controller
 {
     public function dashboard()
@@ -61,44 +61,60 @@ class InventoryController extends Controller
     }
 
     public function products()
-    {
-        $products = Product::with(['inventoryTransactions', 'adminMessages'])
-            ->orderBy('product_name')
-            ->paginate(25);
+{
+    $products = Product::with(['inventoryTransactions', 'adminMessages'])
+        ->orderBy('product_name')
+        ->paginate(10);
 
-        $totalProducts = Product::count();
-        $activeProducts = Product::where('is_active', true)->count();
-        $criticalProducts = Product::where('is_active', true)
-            ->where(function($query) {
-                $query->where(function($q) {
-                    $q->where('current_stock_sacks', '>', 0)
-                      ->where('current_stock_sacks', '<=', DB::raw('critical_level_sacks'));
-                })->orWhere(function($q) {
-                    $q->where('current_stock_pieces', '>', 0)
-                      ->where('current_stock_pieces', '<=', DB::raw('critical_level_pieces'));
-                });
-            })->count();
-        $outOfStockProducts = Product::where('is_active', true)
-            ->where('current_stock_sacks', '<=', 0)
-            ->where('current_stock_pieces', '<=', 0)
-            ->count();
-        $brands = Product::distinct()->pluck('brand')->sort();
-        $pendingMessages = AdminMessage::with(['product', 'admin'])
-            ->where('status', 'pending')
-            ->orderBy('created_at', 'desc')
+    $totalProducts = Product::count();
+    $activeProducts = Product::where('is_active', true)->count();
+    $criticalProducts = Product::where('is_active', true)
+        ->where(function($query) {
+            $query->where(function($q) {
+                $q->where('current_stock_sacks', '>', 0)
+                  ->where('current_stock_sacks', '<=', DB::raw('critical_level_sacks'));
+            })->orWhere(function($q) {
+                $q->where('current_stock_pieces', '>', 0)
+                  ->where('current_stock_pieces', '<=', DB::raw('critical_level_pieces'));
+            });
+        })->count();
+    $outOfStockProducts = Product::where('is_active', true)
+        ->where('current_stock_sacks', '<=', 0)
+        ->where('current_stock_pieces', '<=', 0)
+        ->count();
+    $brands = Product::distinct()->pluck('brand')->sort();
+    $pendingMessages = AdminMessage::with(['product', 'admin'])
+        ->where('status', 'pending')
+        ->orderBy('created_at', 'desc')
+        ->get();
+    
+    // FIX: Temporarily disable soft deletes or handle missing column
+    try {
+        // Option 1: Use DB query directly (no soft deletes)
+        $batches = DB::table('batches')
+            ->orderBy('restock_date', 'desc')
+            ->take(10)
             ->get();
-        $batches = \App\Models\Batch::with('product')->orderBy('restock_date', 'desc')->take(10)->get();
-        return view('inventory.products', compact(
-            'products',
-            'totalProducts',
-            'activeProducts',
-            'criticalProducts',
-            'outOfStockProducts',
-            'brands',
-            'pendingMessages',
-            'batches'
-        ));
+            
+       
+            
+    } catch (\Exception $e) {
+        // If table doesn't exist, use empty collection
+        $batches = collect();
+        \Log::warning('Batches query failed: ' . $e->getMessage());
     }
+    
+    return view('inventory.products', compact(
+        'products',
+        'totalProducts',
+        'activeProducts',
+        'criticalProducts',
+        'outOfStockProducts',
+        'brands',
+        'pendingMessages',
+        'batches'
+    ));
+}
 
     public function storeProduct(Request $request)
     {
@@ -155,64 +171,107 @@ class InventoryController extends Controller
     }
 
     public function stockIn(Request $request)
-    {
-        $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|numeric|min:1',
-            'restock_date' => 'required|date',
-            'expiry_date' => 'nullable|date|after_or_equal:restock_date',
-            'supplier' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
+{
+    $validated = $request->validate([
+        'product_id' => 'required|exists:products,id',
+        'quantity_sacks' => 'required|numeric|min:0',
+        'quantity_pieces' => 'required|integer|min:0',
+        'restock_date' => 'required|date',
+        'expiry_date' => 'nullable|date|after_or_equal:restock_date',
+        'supplier' => 'nullable|string|max:255',
+        'notes' => 'nullable|string',
+    ]);
+
+    DB::transaction(function () use ($validated) {
+        $product = Product::findOrFail($validated['product_id']);
+
+        if (auth()->check()) {
+            $task = Task::safeCreate([
+                'user_id' => auth()->id(),
+                'task_type' => 'stock_in',
+                'context' => [
+                    'product_id' => $product->id, 
+                    'quantity_sacks' => $validated['quantity_sacks'],
+                    'quantity_pieces' => $validated['quantity_pieces']
+                ],
+                'started_at' => now(),
+            ]);
+
+            EmployeeLog::safeCreate([
+                'user_id' => auth()->id(),
+                'event' => 'stock_in:start',
+                'logged_at' => now(),
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'session_id' => request()->session() ? request()->session()->getId() : null,
+                'context' => ['task_id' => $task ? $task->id : null]
+            ]);
+        }
+
+        // Update stock for both sacks and pieces
+        $product->current_stock_sacks += $validated['quantity_sacks'];
+        $product->current_stock_pieces += $validated['quantity_pieces'];
+        $product->save();
+
+        // Create transaction record
+        InventoryTransaction::create([
+            'product_id' => $product->id,
+            'type' => 'stock-in',
+            'quantity_sacks' => $validated['quantity_sacks'],
+            'quantity_pieces' => $validated['quantity_pieces'],
+            'quantity_kilos' => $validated['quantity_sacks'] * 50,
+            'notes' => $validated['notes'] ?? null,
+            'user_id' => auth()->id()
         ]);
 
-        DB::transaction(function () use ($validated) {
-            $product = Product::findOrFail($validated['product_id']);
+        // Also create a batch record if needed
+        // (You might want to link this to the batch_product table)
+        $batch = \App\Models\Batch::create([
+            'batch_code' => 'BATCH-' . strtoupper(uniqid()),
+            'restock_date' => $validated['restock_date'],
+            'expiry_date' => $validated['expiry_date'] ?? null,
+            'supplier' => $validated['supplier'] ?? null,
+            'notes' => $validated['notes'] ?? null,
+        ]);
 
-            // Update stock (assume quantity is in sacks for now)
-            $product->current_stock_sacks += $validated['quantity'];
-            $product->save();
-
-            // Auto-increment batch code globally
-            $lastBatch = \App\Models\Batch::orderByDesc('id')->first();
-            $nextNumber = 1;
-            if ($lastBatch && preg_match('/^BATCH-(\d+)$/', $lastBatch->batch_code, $matches)) {
-                $nextNumber = intval($matches[1]) + 1;
-            }
-            $batchCode = 'BATCH-' . $nextNumber;
-
-            // Compute expiry date if not provided
-            $expiryDate = $validated['expiry_date'] ?? null;
-            if (!$expiryDate) {
-                $restockDate = \Carbon\Carbon::parse($validated['restock_date']);
-                $expiryDate = $restockDate->copy()->addDays($product->expiration_days)->format('Y-m-d');
-            }
-
-            // Create batch record
-            \App\Models\Batch::create([
-                'product_id' => $product->id,
-                'batch_code' => $batchCode,
-                'quantity' => $validated['quantity'],
-                'restock_date' => $validated['restock_date'],
-                'expiry_date' => $expiryDate,
-                'supplier' => $validated['supplier'] ?? null,
-                'notes' => $validated['notes'] ?? null,
+        // Link product to batch
+        if (Schema::hasTable('batch_product')) {
+            $batch->products()->attach($product->id, [
+                'quantity' => $validated['quantity_sacks']
             ]);
+        }
 
-            // Create transaction record
-            InventoryTransaction::create([
-                'product_id' => $product->id,
-                'type' => 'stock-in',
-                'quantity_sacks' => $validated['quantity'],
-                'quantity_pieces' => 0,
-                'quantity_kilos' => $validated['quantity'] * 50,
-                'notes' => $validated['notes'] ?? null,
-                'user_id' => auth()->id()
+        // Mark task completed and update metrics
+        if (auth()->check()) {
+            if (isset($task)) {
+                $task->completed_at = now();
+                $task->duration_seconds = now()->diffInSeconds($task->started_at);
+                $task->save();
+                EmployeeMetricsService::recordTaskCompleted(auth()->id(), 'stock_in', $task->duration_seconds);
+            }
+            
+            // Record total quantity for metrics (sacks + pieces converted)
+            $totalQuantity = $validated['quantity_sacks'] + ($validated['quantity_pieces'] / 100); // Assuming 100 pieces per sack
+            EmployeeMetricsService::recordStockIn(auth()->id(), $totalQuantity);
+
+            EmployeeLog::safeCreate([
+                'user_id' => auth()->id(),
+                'event' => 'stock_in:complete',
+                'logged_at' => now(),
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'session_id' => request()->session() ? request()->session()->getId() : null,
+                'context' => [
+                    'product_id' => $product->id, 
+                    'quantity_sacks' => $validated['quantity_sacks'],
+                    'quantity_pieces' => $validated['quantity_pieces']
+                ]
             ]);
-        });
+        }
+    });
 
-        return redirect()->back()->with('success', 'Stock and batch added successfully!');
-    }
-
+    return redirect()->back()->with('success', 'Stock added successfully!');
+}
     public function stockOut(Request $request)
     {
         $validated = $request->validate([
@@ -224,6 +283,25 @@ class InventoryController extends Controller
 
         DB::transaction(function () use ($validated) {
             $product = Product::findOrFail($validated['product_id']);
+
+            if (auth()->check()) {
+                $task = Task::safeCreate([
+                    'user_id' => auth()->id(),
+                    'task_type' => 'stock_out',
+                    'context' => ['product_id' => $product->id, 'quantity_sacks' => $validated['quantity_sacks'], 'quantity_pieces' => $validated['quantity_pieces']],
+                    'started_at' => now(),
+                ]);
+
+                \App\Models\EmployeeLog::safeCreate([
+                    'user_id' => auth()->id(),
+                    'event' => 'stock_out:start',
+                    'logged_at' => now(),
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                    'session_id' => request()->session() ? request()->session()->getId() : null,
+                    'context' => ['task_id' => $task ? $task->id : null]
+                ]);
+            }
 
             $sacksToDeduct = (float) $validated['quantity_sacks'];
             $piecesToDeduct = (int) $validated['quantity_pieces'];
@@ -251,6 +329,26 @@ class InventoryController extends Controller
                 'notes' => $validated['notes'] ?? null,
                 'user_id' => auth()->id()
             ]);
+
+            if (auth()->check()) {
+                if (isset($task)) {
+                    $task->completed_at = now();
+                    $task->duration_seconds = now()->diffInSeconds($task->started_at);
+                    $task->save();
+                    EmployeeMetricsService::recordTaskCompleted(auth()->id(), 'stock_out', $task->duration_seconds);
+                }
+                EmployeeMetricsService::recordStockOut(auth()->id(), $sacksToDeduct);
+
+                \App\Models\EmployeeLog::safeCreate([
+                    'user_id' => auth()->id(),
+                    'event' => 'stock_out:complete',
+                    'logged_at' => now(),
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                    'session_id' => request()->session() ? request()->session()->getId() : null,
+                    'context' => ['product_id' => $product->id, 'quantity_sacks' => $sacksToDeduct, 'quantity_pieces' => $piecesToDeduct]
+                ]);
+            }
         });
 
         return redirect()->back()->with('success', 'Stock deducted successfully!');
@@ -296,35 +394,77 @@ class InventoryController extends Controller
 
         return view('admin.recent-stockins', compact('stockIns'));
     }
-    public function getProductBatches($productId)
-    {
-        $batches = ProductBatch::where('product_id', $productId)
-            ->orderBy('date_received', 'desc')
-            ->get(['batch_number', 'quantity_sacks', 'quantity_pieces', 'date_received', 'expiry_date', 'supplier']);
+    // In InventoryController.php
+public function createBatch()
+{
+    $products = Product::where('is_active', true)
+        ->orderBy('product_name')
+        ->get();
+    
+    return view('inventory.batches', compact('products'));
+}
 
-        return response()->json($batches);
-    }
-
-    /**
-     * Show all batches for batch list UI.
-     */
-    public function batches(Request $request)
-    {
-        $query = \App\Models\Batch::with('product');
-        if ($request->filled('product_id')) {
-            $query->where('product_id', $request->product_id);
+public function storeBatch(Request $request)
+{
+    $validated = $request->validate([
+        'batch_code' => 'required|string|max:100|unique:batches,batch_code',
+        'restock_date' => 'required|date',
+        'expiry_date' => 'nullable|date|after:restock_date',
+        'supplier' => 'nullable|string|max:255',
+        'notes' => 'nullable|string',
+        'products' => 'required|array|min:1',
+        'products.*.product_id' => 'required|exists:products,id',
+        'products.*.quantity' => 'required|numeric|min:0.01',
+    ]);
+    
+    DB::transaction(function () use ($validated) {
+        $batch = Batch::create([
+            'batch_code' => $validated['batch_code'],
+            'restock_date' => $validated['restock_date'],
+            'expiry_date' => $validated['expiry_date'],
+            'supplier' => $validated['supplier'],
+            'notes' => $validated['notes'],
+        ]);
+        
+        foreach ($validated['products'] as $productData) {
+            $batch->products()->attach($productData['product_id'], [
+                'quantity' => $productData['quantity']
+            ]);
         }
-        if ($request->filled('status')) {
-            $today = now()->toDateString();
-            if ($request->status === 'expired') {
-                $query->where('expiry_date', '<', $today);
-            } elseif ($request->status === 'active') {
-                $query->where('expiry_date', '>=', $today);
-            }
-        }
-        // Always order by latest restock_date first
-        $batches = $query->orderByDesc('restock_date')->paginate(25);
-        $products = Product::orderBy('product_name')->get();
-        return view('inventory.batches', compact('batches', 'products'));
+    });
+    
+    return redirect()->route('inventory.batches')->with('success', 'Batch created successfully!');
+}
+public function batches()
+{
+    // Get products for the filter dropdown
+    $products = Product::where('is_active', true)
+        ->orderBy('product_name')
+        ->get();
+    
+    // Check if batches table exists
+    if (!Schema::hasTable('batches')) {
+        return view('inventory.batches', [
+            'batches' => collect(),
+            'products' => $products,
+            'error' => 'Batches table not found. Please run migrations.'
+        ]);
     }
+    
+    // Simple query - no joins to non-existent tables
+    $batches = DB::table('batches')
+        ->orderBy('restock_date', 'desc')
+        ->paginate(10);
+    
+    // Check if pivot table exists
+    $hasPivotTable = Schema::hasTable('batch_product');
+    
+    // If pivot table exists, try to get product data
+    if ($hasPivotTable) {
+        // You could add logic here to fetch products for each batch
+        // For now, we'll just pass the flag to the view
+    }
+    
+    return view('inventory.batches', compact('batches', 'products', 'hasPivotTable'));
+}
 }

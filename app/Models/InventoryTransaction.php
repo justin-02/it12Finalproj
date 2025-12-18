@@ -39,6 +39,6 @@ class InventoryTransaction extends Model
 
     public function batch()
     {
-        return $this->belongsTo(ProductBatch::class);
+        return $this->belongsTo(Batch::class);
     }
 }

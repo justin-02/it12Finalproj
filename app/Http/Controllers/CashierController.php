@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
 use App\Models\InventoryTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Task;
+use App\Models\EmployeeLog;
+use App\Services\EmployeeMetricsService;
 
 class CashierController extends Controller
 {
@@ -50,14 +54,169 @@ class CashierController extends Controller
         ));
     }
 
-    public function transactionHistory()
+    public function transactionHistory(Request $request)
     {
-        $transactions = Order::where('status', 'completed')
+        $query = Order::where('status', 'completed')
             ->with(['items.product', 'helper', 'cashier'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(25);
+            ->orderBy('created_at', 'desc');
 
-        return view('cashier.transactions', compact('transactions'));
+        // Apply filters
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        
+        if ($request->filled('cashier_id')) {
+            $query->where('cashier_id', $request->cashier_id);
+        }
+        
+        if ($request->filled('helper_id')) {
+            $query->where('helper_id', $request->helper_id);
+        }
+        
+        if ($request->filled('min_amount')) {
+            $query->where('total_amount', '>=', $request->min_amount);
+        }
+        
+        if ($request->filled('max_amount')) {
+            $query->where('total_amount', '<=', $request->max_amount);
+        }
+
+        $transactions = $query->paginate(25);
+        
+        // Get cashiers and helpers for filters
+        $cashiers = User::where('role', 'cashier')->orderBy('name')->get();
+        $helpers = User::where('role', 'helper')->orderBy('name')->get();
+        
+        // Calculate statistics
+        $totalAmount = $transactions->sum('total_amount');
+        $todaySales = Order::where('status', 'completed')
+            ->whereDate('created_at', today())
+            ->sum('total_amount');
+        $todayCount = Order::where('status', 'completed')
+            ->whereDate('created_at', today())
+            ->count();
+        $weekSales = Order::where('status', 'completed')
+            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->sum('total_amount');
+        $weekCount = Order::where('status', 'completed')
+            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->count();
+        $monthSales = Order::where('status', 'completed')
+            ->whereMonth('created_at', now()->month)
+            ->sum('total_amount');
+        $monthCount = Order::where('status', 'completed')
+            ->whereMonth('created_at', now()->month)
+            ->count();
+        $averageTransaction = $transactions->count() > 0 ? $transactions->avg('total_amount') : 0;
+
+        return view('cashier.transactions', compact(
+            'transactions',
+            'cashiers',
+            'helpers',
+            'totalAmount',
+            'todaySales',
+            'todayCount',
+            'weekSales',
+            'weekCount',
+            'monthSales',
+            'monthCount',
+            'averageTransaction'
+        ));
+    }
+
+    public function transactionDetails(Order $order)
+    {
+        // Verify the order belongs to this cashier or is accessible
+        if (auth()->user()->role === 'cashier' && $order->cashier_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to view this transaction'
+            ], 403);
+        }
+
+        $order->load(['items.product', 'cashier', 'helper']);
+        
+        return response()->json([
+            'success' => true,
+            'transaction' => $order
+        ]);
+    }
+
+    public function exportTransactions(Request $request)
+    {
+        $query = Order::where('status', 'completed')
+            ->with(['cashier', 'helper', 'items.product'])
+            ->orderBy('created_at', 'desc');
+
+        // Apply same filters as transaction history
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        
+        if ($request->filled('cashier_id')) {
+            $query->where('cashier_id', $request->cashier_id);
+        }
+        
+        if ($request->filled('helper_id')) {
+            $query->where('helper_id', $request->helper_id);
+        }
+
+        $transactions = $query->get();
+
+        $filename = 'transactions_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($transactions) {
+            $file = fopen('php://output', 'w');
+            
+            // Header row
+            fputcsv($file, [
+                'Order Number', 
+                'Date', 
+                'Cashier', 
+                'Helper', 
+                'Items Count', 
+                'Subtotal', 
+                'Discount', 
+                'Total Amount', 
+                'Cash Received', 
+                'Change',
+                'Status'
+            ]);
+
+            // Data rows
+            foreach ($transactions as $transaction) {
+                fputcsv($file, [
+                    $transaction->order_number,
+                    $transaction->created_at->format('Y-m-d H:i:s'),
+                    $transaction->cashier->name ?? 'N/A',
+                    $transaction->helper->name ?? 'N/A',
+                    $transaction->items->count(),
+                    $transaction->subtotal ?? 0,
+                    $transaction->discount_amount ?? 0,
+                    $transaction->total_amount ?? 0,
+                    $transaction->cash_received ?? 0,
+                    $transaction->change ?? 0,
+                    $transaction->status
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function receipt(Order $order)
@@ -66,6 +225,12 @@ class CashierController extends Controller
         if ($order->status !== 'completed') {
             return redirect()->route('cashier.dashboard')
                 ->with('error', 'Order is not completed yet.');
+        }
+
+        // Verify the order belongs to this cashier
+        if (auth()->user()->role === 'cashier' && $order->cashier_id !== auth()->id()) {
+            return redirect()->route('cashier.dashboard')
+                ->with('error', 'Unauthorized to view this receipt.');
         }
 
         $order->load(['items.product', 'helper', 'cashier']);
@@ -94,6 +259,26 @@ class CashierController extends Controller
 
         $totalAmount = $order->items->sum('subtotal');
 
+        // Create a task record for processing
+        if (auth()->check()) {
+            $task = Task::safeCreate([
+                'user_id' => auth()->id(),
+                'task_type' => 'process_order',
+                'context' => ['order_id' => $order->id],
+                'started_at' => now(),
+            ]);
+
+            \App\Models\EmployeeLog::safeCreate([
+                'user_id' => auth()->id(),
+                'event' => 'process_order:start',
+                'logged_at' => now(),
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'session_id' => request()->session() ? request()->session()->getId() : null,
+                'context' => ['task_id' => $task ? $task->id : null]
+            ]);
+        }
+
         return view('cashier.process-order', compact('order', 'totalAmount'));
     }
 
@@ -109,6 +294,8 @@ class CashierController extends Controller
 
         $request->validate([
             'cash_received' => 'required|numeric|min:0',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         return DB::transaction(function () use ($order, $request) {
@@ -127,7 +314,9 @@ class CashierController extends Controller
                 $item->save();
             }
 
-            $totalAmount = $order->items->sum('subtotal');
+            $subtotal = $order->items->sum('subtotal');
+            $discountAmount = (float) ($request->input('discount_amount') ?? 0);
+            $totalAmount = round($subtotal - $discountAmount, 2);
             $cashReceived = (float) $request->input('cash_received');
             $change = round($cashReceived - $totalAmount, 2);
 
@@ -144,17 +333,51 @@ class CashierController extends Controller
             $order->update([
                 'cashier_id' => auth()->id(),
                 'status' => 'completed',
+                'subtotal' => $subtotal,
+                'discount_amount' => $discountAmount,
                 'total_amount' => $totalAmount,
                 'cash_received' => $cashReceived,
                 'change' => $change,
+                'notes' => $request->input('notes'),
             ]);
 
             Log::info('Order completed', [
                 'order_id' => $order->id,
+                'subtotal' => $subtotal,
+                'discount' => $discountAmount,
                 'total_amount' => $totalAmount,
                 'cashier_id' => auth()->id(),
                 'items_count' => $order->items->count()
             ]);
+
+            // mark task completed and record metrics
+            if (auth()->check()) {
+                $task = Task::where('user_id', auth()->id())
+                    ->where('task_type', 'process_order')
+                    ->where('context->order_id', $order->id)
+                    ->latest()
+                    ->first();
+
+                if ($task) {
+                    $task->completed_at = now();
+                    $task->duration_seconds = now()->diffInSeconds($task->started_at);
+                    $task->save();
+                    EmployeeMetricsService::recordTaskCompleted(auth()->id(), 'process_order', $task->duration_seconds);
+                }
+
+                // record transaction metric
+                EmployeeMetricsService::recordTransaction(auth()->id(), $totalAmount);
+
+                \App\Models\EmployeeLog::safeCreate([
+                    'user_id' => auth()->id(),
+                    'event' => 'process_order:complete',
+                    'logged_at' => now(),
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                    'session_id' => request()->session() ? request()->session()->getId() : null,
+                    'context' => ['order_id' => $order->id]
+                ]);
+            }
 
             return redirect()->route('cashier.receipt', $order->id)
                 ->with('success', 'Order completed and inventory updated successfully.');
@@ -233,4 +456,5 @@ class CashierController extends Controller
             ]);
         }
     }
+    
 }

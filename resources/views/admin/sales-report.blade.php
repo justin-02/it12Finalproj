@@ -7,12 +7,173 @@
     <h1 class="h2"><i class="bi bi-graph-up"></i> Sales Reports</h1>
 </div>
 
+<style>
+.sales-summary-card {
+    border: none;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    background: linear-gradient(135deg, #E8FFD7 0%, #D6F5C3 100%);
+    box-shadow: 0 4px 12px rgba(232, 255, 215, 0.2);
+    border: 1px solid rgba(232, 255, 215, 0.3);
+    height: 120px;
+}
+
+.sales-summary-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(232, 255, 215, 0.3);
+    background: linear-gradient(135deg, #F0FFE0 0%, #DFF8CF 100%);
+}
+
+.sales-summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #8BC34A, #4CAF50);
+}
+
+.sales-summary-card .card-body {
+    position: relative;
+    z-index: 1;
+    padding: 1rem !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+
+.sales-summary-card .card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.sales-summary-card .text-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.sales-summary-card .card-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #1B5E20;
+    margin-bottom: 0.4rem;
+    opacity: 0.95;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sales-summary-card .card-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1B5E20;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+}
+
+.sales-summary-card .currency {
+    color: #1B5E20;
+    font-weight: 700;
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.sales-summary-card .icon-wrapper {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.sales-summary-card:hover .icon-wrapper {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.08);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.sales-summary-card .icon-wrapper i {
+    font-size: 1.3rem;
+    color: #2E7D32;
+}
+</style>
+
+<!-- Sales Summary - Made more compact -->
+<div class="row mb-3">
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card sales-summary-card h-100">
+            <div class="card-body">
+                <div class="card-content">
+                    <div class="text-content">
+                        <div class="card-title">Total Sales</div>
+                        <div class="card-value">
+                            <span class="currency">₱</span>{{ number_format($totalSales, 2) }}
+                        </div>
+                    </div>
+                    <div class="icon-wrapper">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card sales-summary-card h-100">
+            <div class="card-body">
+                <div class="card-content">
+                    <div class="text-content">
+                        <div class="card-title">Total Transactions</div>
+                        <div class="card-value">{{ $totalTransactions }}</div>
+                    </div>
+                    <div class="icon-wrapper">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card sales-summary-card h-100">
+            <div class="card-body">
+                <div class="card-content">
+                    <div class="text-content">
+                        <div class="card-title">Average Sale</div>
+                        <div class="card-value">
+                            <span class="currency">₱</span>{{ number_format($averageSale, 2) }}
+                        </div>
+                    </div>
+                    <div class="icon-wrapper">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Date Filter - Made more compact -->
 <div class="row mb-3">
     <div class="col-12">
         <div class="card shadow-sm">
             <div class="card-header py-2">
-                <h5 class="card-title mb-0 small fw-bold">Date Filter</h5>
+                <h5 class="card-title mb-0 fw-bold fs-5">Date Filter</h5>
             </div>
             <div class="card-body p-3">
                 <form method="GET" action="{{ route('admin.sales-report') }}">
@@ -28,11 +189,20 @@
                                    value="{{ $endDate->format('Y-m-d') }}">
                         </div>
                         <div class="col-md-3">
-                            <div class="d-grid gap-2 d-md-block">
-                                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-                                <a href="{{ route('admin.sales-report') }}" class="btn btn-secondary btn-sm">Reset</a>
-                                <button type="button" class="btn btn-success btn-sm" onclick="printReport()">Print</button>
-                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+    <button type="submit" class="btn btn-sm btn-primary px-3" 
+            style="background: linear-gradient(135deg, #1E88E5, #1565C0); border: none; border-radius: 8px; font-weight: 500;">
+        <i class="bi bi-funnel me-1"></i>Filter
+    </button>
+    <a href="{{ route('admin.sales-report') }}" class="btn btn-sm btn-secondary px-3"
+       style="background: linear-gradient(135deg, #6c757d, #495057); border: none; border-radius: 8px; font-weight: 500;">
+        <i class="bi bi-arrow-clockwise me-1"></i>Reset
+    </a>
+    <button type="button" class="btn btn-sm btn-success px-3" onclick="printReport()"
+            style="background: linear-gradient(135deg, #1E88E5, #1565C0); border: none; border-radius: 8px; font-weight: 500;">
+        <i class="bi bi-printer me-1"></i>Print
+    </button>
+</div>
                         </div>
                     </div>
                 </form>
@@ -41,64 +211,38 @@
     </div>
 </div>
 
-<!-- Sales Summary - Made more compact -->
-<div class="row mb-3">
-    <div class="col-xl-4 col-md-6 mb-3">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Total Sales</div>
-                        <div class=" h5 mb-0 font-weight-bold text-gray-800 text-end">₱{{ number_format($totalSales, 2) }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-currency fa-2x text-gray-300">₱</i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-4 col-md-6 mb-3">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Total Transactions</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $totalTransactions }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-receipt fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-4 col-md-6 mb-3">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Average Sale</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">₱{{ number_format($averageSale, 2) }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-graph-up fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1E88E5, #1565C0) !important;
+    border: none !important;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #6c757d, #495057) !important;
+    border: none !important;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #1E88E5, #1565C0) !important;
+    border: none !important;
+}
+
+.btn-sm i {
+    font-size: 0.9rem;
+}
+</style>
 
 <!-- Sales Data - Made more compact -->
 <div class="row">
     <div class="col-12">
         <div class="card shadow-sm">
             <div class="card-header py-2">
-                <h5 class="card-title mb-0 small fw-bold">Sales Details</h5>
+                <h5 class="card-title mb-0 fw-bold fs-5">Sales Details</h5>
             </div>
             <div class="card-body p-3">
                 <div class="table-responsive">
@@ -129,13 +273,14 @@
                                     <small class="text-muted">{{ $order->created_at->format('H:i') }}</small>
                                 </td>
                                 <td class="small text-center">
-                                    <button type="button" class="btn btn-sm btn-info" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#viewSaleModal"
-                                            onclick="viewSale({{ $order->id }})">
-                                        <i class="bi bi-eye"></i> View
-                                    </button>
-                                </td>
+    <button type="button" class="btn btn-sm btn-info" 
+            data-bs-toggle="modal" 
+            data-bs-target="#viewSaleModal"
+            onclick="viewSale({{ $order->id }})"
+            style="background: linear-gradient(135deg, #1E88E5, #1565C0); border: none; border-radius: 8px; font-weight: 500; color: white;">
+        <i class="bi bi-eye" style="color: white;"></i> View
+    </button>
+</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -357,6 +502,7 @@
     }
     .table-sm td, .table-sm th {
         padding: 0.3rem 0.5rem;
+
     }
     .btn-sm {
         padding: 0.25rem 0.5rem;

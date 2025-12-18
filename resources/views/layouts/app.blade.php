@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <!-- Tailwind (Play CDN for quick utility usage) -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
         :root {
@@ -218,6 +220,16 @@
             transform: translateY(-2px);
             box-shadow: var(--box-shadow-hover);
         }
+        /* Blur helper applied to the page wrapper when a modal needs focus */
+        .blurred .main-content,
+        .blurred .sidebar {
+            filter: blur(6px) grayscale(0.02);
+            transition: filter 200ms ease;
+            pointer-events: none;
+            user-select: none;
+        }
+        /* Do not apply blur to modal elements (modal is appended to body)
+           but keep sidebar clickable disabled visually while modal open */
         
         .bg-primary-custom {
             background-color: var(--primary-color) !important;
@@ -350,9 +362,12 @@
     <!-- DataTables -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Chart.js for dashboards -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
 
 
     <script src="{{ asset('js/inventory.js') }}"></script>
+    <script src="{{ asset('js/heartbeat.js') }}"></script>
     
     @stack('scripts')
     <script>
@@ -364,6 +379,107 @@
             sidebar.classList.toggle('active');
         });
     });
+</script>
+
+<!-- Idle warning modal and idle detection -->
+<div class="modal fade" id="idleModal" tabindex="-1" aria-labelledby="idleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="idleModalLabel">You're about to be logged out</h5>
+      </div>
+      <div class="modal-body">
+        <p>We detected inactivity. You will be logged out in <strong id="idleCountdown">60</strong> seconds. Move your mouse or press a key to stay signed in.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="staySignedIn">Stay signed in</button>
+        <button type="button" class="btn btn-danger" id="forceLogout">Log out now</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Idle detection + auto-logout
+(function(){
+    const idleThreshold = 5 * 60 * 1000; // 5 minutes
+    const warningDuration = 60; // seconds countdown in modal
+    let idleTimer = null;
+    let countdownTimer = null;
+    let remaining = warningDuration;
+    const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    function resetIdleTimer() {
+        // if modal showing, hide and reset countdown
+        const modalEl = document.getElementById('idleModal');
+        if ($(modalEl).hasClass('show')) {
+            $(modalEl).modal('hide');
+        }
+        remaining = warningDuration;
+        document.getElementById('idleCountdown').textContent = remaining;
+
+        if (countdownTimer) {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+        }
+
+        if (idleTimer) clearTimeout(idleTimer);
+        idleTimer = setTimeout(onIdleReached, idleThreshold);
+    }
+
+    function onIdleReached() {
+        // show modal and start countdown
+        const modalEl = document.getElementById('idleModal');
+        $(modalEl).modal({backdrop: 'static', keyboard: false});
+        $(modalEl).modal('show');
+
+        remaining = warningDuration;
+        document.getElementById('idleCountdown').textContent = remaining;
+
+        countdownTimer = setInterval(function(){
+            remaining -= 1;
+            document.getElementById('idleCountdown').textContent = remaining;
+            if (remaining <= 0) {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+                doLogout();
+            }
+        }, 1000);
+    }
+
+    function doLogout() {
+        fetch('{{ route('logout') }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrf,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        }).finally(()=>{
+            // Redirect to login page after logout
+            window.location.href = '{{ route('login') }}';
+        });
+    }
+
+    // user interactions that keep session alive
+    ['mousemove','mousedown','keydown','scroll','touchstart'].forEach(function(evt){
+        window.addEventListener(evt, resetIdleTimer, {passive: true});
+    });
+
+    // stay signed in button
+    document.addEventListener('click', function(e){
+        if (e.target && e.target.id === 'staySignedIn') {
+            resetIdleTimer();
+        }
+        if (e.target && e.target.id === 'forceLogout') {
+            doLogout();
+        }
+    });
+
+    // start
+    resetIdleTimer();
+})();
 </script>
 
 </body>

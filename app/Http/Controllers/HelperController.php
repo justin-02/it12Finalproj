@@ -7,6 +7,9 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Models\Task;
+use App\Models\EmployeeLog;
+use App\Services\EmployeeMetricsService;
 
 class HelperController extends Controller
 {
@@ -60,6 +63,24 @@ class HelperController extends Controller
                 'status' => 'preparing'
             ]);
             Log::info('Order created', ['order_id' => $order->id, 'helper_id' => auth()->id()]);
+            if (auth()->check()) {
+                $task = Task::safeCreate([
+                    'user_id' => auth()->id(),
+                    'task_type' => 'prepare_order',
+                    'context' => ['order_id' => $order->id],
+                    'started_at' => now(),
+                ]);
+
+                \App\Models\EmployeeLog::safeCreate([
+                    'user_id' => auth()->id(),
+                    'event' => 'prepare_order:start',
+                    'logged_at' => now(),
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                    'session_id' => request()->session() ? request()->session()->getId() : null,
+                    'context' => ['task_id' => $task ? $task->id : null]
+                ]);
+            }
         }
 
         // Add item to order (price will be set by cashier)
@@ -148,6 +169,32 @@ class HelperController extends Controller
             $order->update(['status' => 'ready']);
 
             Log::info('Order submitted to cashier', ['order_id' => $order->id, 'items_count' => $order->items->count()]);
+
+            // Mark helper prepare task as completed and record metrics
+            if (auth()->check()) {
+                $task = Task::where('user_id', auth()->id())
+                    ->where('task_type', 'prepare_order')
+                    ->where('context->order_id', $order->id)
+                    ->latest()
+                    ->first();
+
+                if ($task) {
+                    $task->completed_at = now();
+                    $task->duration_seconds = now()->diffInSeconds($task->started_at);
+                    $task->save();
+                    EmployeeMetricsService::recordTaskCompleted(auth()->id(), 'prepare_order', $task->duration_seconds);
+                }
+
+                \App\Models\EmployeeLog::safeCreate([
+                    'user_id' => auth()->id(),
+                    'event' => 'prepare_order:complete',
+                    'logged_at' => now(),
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                    'session_id' => request()->session() ? request()->session()->getId() : null,
+                    'context' => ['order_id' => $order->id]
+                ]);
+            }
 
             return response()->json([
                 'success' => true, 

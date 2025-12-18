@@ -34,70 +34,86 @@
     </div>
 </div>
 
-<!-- Products Summary - Made more compact -->
+<!-- Products Summary -->
 <div class="row mb-3">
+    <!-- Total Products -->
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card dashboard-card" style="background: linear-gradient(135deg, #E8FFD7 0%, #D6F5C3 100%); border: 1px solid rgba(232, 255, 215, 0.3);">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Total Products</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $totalProducts }}</div>
+                <div class="card-content">
+                    <div class="text-content">
+                        <div class="card-title">TOTAL PRODUCTS</div>
+                        <h2 class="card-value">{{ $totalProducts }}</h2>
+                        <div class="trend-indicator">
+                            <i class="bi bi-grid-3x3-gap me-1"></i>
+                            <span>Inventory Count</span>
+                        </div>
                     </div>
-                    <div class="col-auto">
-                        <i class="bi bi-box-seam fa-2x text-gray-300"></i>
+                    <div class="icon-wrapper">
+                        <i class="bi bi-box-seam" style="color: #2E7D32;"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Active Products -->
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-success shadow h-100 py-2">
+        <div class="card dashboard-card" style="background: linear-gradient(135deg, #E8FFD7 0%, #D6F5C3 100%); border: 1px solid rgba(232, 255, 215, 0.3);">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Active Products</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $activeProducts }}</div>
+                <div class="card-content">
+                    <div class="text-content">
+                        <div class="card-title">ACTIVE PRODUCTS</div>
+                        <h2 class="card-value">{{ $activeProducts }}</h2>
+                        <div class="trend-indicator">
+                            <i class="bi bi-check-circle me-1"></i>
+                            <span>Available</span>
+                        </div>
                     </div>
-                    <div class="col-auto">
-                        <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                    <div class="icon-wrapper">
+                        <i class="bi bi-check-circle" style="color: #2E7D32;"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Critical Stock -->
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card dashboard-card" style="background: linear-gradient(135deg, #E8FFD7 0%, #D6F5C3 100%); border: 1px solid rgba(232, 255, 215, 0.3);">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Critical Stock</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $criticalProducts }}</div>
+                <div class="card-content">
+                    <div class="text-content">
+                        <div class="card-title" style="color: #FD7E14 !important;">CRITICAL STOCK</div>
+                        <h2 class="card-value" style="color: #FD7E14 !important;">{{ $criticalProducts }}</h2>
+                        <div class="trend-indicator" style="color: #FD7E14 !important;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            <span>Needs Attention</span>
+                        </div>
                     </div>
-                    <div class="col-auto">
-                        <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
+                    <div class="icon-wrapper">
+                        <i class="bi bi-exclamation-triangle" style="color: #FD7E14;"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Out of Stock -->
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-info shadow h-100 py-2">
+        <div class="card dashboard-card" style="background: linear-gradient(135deg, #E8FFD7 0%, #D6F5C3 100%); border: 1px solid rgba(232, 255, 215, 0.3);">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Out of Stock</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $outOfStockProducts }}</div>
+                <div class="card-content">
+                    <div class="text-content">
+                        <div class="card-title" style="color: #DC3545 !important;">OUT OF STOCK</div>
+                        <h2 class="card-value" style="color: #DC3545 !important;">{{ $outOfStockProducts }}</h2>
+                        <div class="trend-indicator" style="color: #DC3545 !important;">
+                            <i class="bi bi-x-circle me-1"></i>
+                            <span>Unavailable</span>
+                        </div>
                     </div>
-                    <div class="col-auto">
-                        <i class="bi bi-x-circle fa-2x text-gray-300"></i>
+                    <div class="icon-wrapper">
+                        <i class="bi bi-x-circle" style="color: #DC3545;"></i>
                     </div>
                 </div>
             </div>
@@ -105,6 +121,122 @@
     </div>
 </div>
 
+<style>
+/* Reuse the same dashboard-card styles */
+.dashboard-card {
+    border: none;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    background: linear-gradient(135deg, #E8FFD7 0%, #D6F5C3 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    height: 140px;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.dashboard-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #8BC34A, #4CAF50);
+}
+
+.dashboard-card .card-body {
+    position: relative;
+    z-index: 1;
+    padding: 1.25rem !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.dashboard-card .card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.dashboard-card .icon-wrapper {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.dashboard-card:hover .icon-wrapper {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.08);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.dashboard-card .icon-wrapper i {
+    font-size: 1.5rem;
+    color: #2E7D32;
+}
+
+.dashboard-card .text-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.dashboard-card .card-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: #1B5E20;
+    margin-bottom: 0.5rem;
+    opacity: 0.95;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dashboard-card .card-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1B5E20;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+}
+
+.dashboard-card .trend-indicator {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.4);
+    color: #1B5E20;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.dashboard-card .trend-indicator i {
+    font-size: 0.8rem;
+}
+</style>
 <!-- Products Table - Made more compact -->
 <div class="card shadow-sm">
     <div class="card-header py-2">
@@ -143,16 +275,6 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-4 text-end">
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-success" onclick="exportToCSV()" title="Export to CSV">
-                        <i class="bi bi-file-earmark-excel"></i> Export
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" onclick="printTable()" title="Print">
-                        <i class="bi bi-printer"></i> Print
-                    </button>
-                </div>
-            </div>
         </div>
 
         <!-- Table - Made more compact -->
@@ -169,7 +291,7 @@
                         <th class="small">Critical Level</th>
                         <th class="small">Status</th>
                         <th class="text-end">Last Updated</th>
-                        <th class="small">Actions</th>    
+                        <th class="small" style="min-width: 180px;">Actions</th>    
                     </tr>
                 </thead>
                 <tbody>
@@ -227,7 +349,7 @@
                             <small class="text-muted">{{ $product->updated_at ? \Carbon\Carbon::parse($product->updated_at)->format('H:i') : '' }}</small>
                         </td>
                         <td class="small">
-                            <div class="btn-group btn-group-sm" role="group">
+                            <div class="btn-group btn-group-sm" role="group" style="gap: 2px;">
                                 <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" 
                                         data-bs-target="#editProductModal" 
                                         onclick="editProduct({{ $product }})"
@@ -272,10 +394,10 @@
         <!-- Pagination - Made more compact -->
         @if($products->hasPages())
         <div class="d-flex justify-content-between align-items-center mt-3">
-            <div class="text-muted small">
+            <div class="text-muted small" style="flex: 1; min-width: 200px; padding-right: 15px;">
                 Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{ $products->total() }} entries
             </div> 
-            <nav>
+            <nav style="flex-shrink: 0;">
                 {{ $products->links('pagination::bootstrap-5') }}
             </nav>
         </div>
@@ -646,6 +768,37 @@
     .btn-group-sm > .btn, .btn-sm {
         padding: 0.25rem 0.5rem;
         font-size: 0.75rem;
+    }
+    
+    /* Fix action buttons spacing */
+    .btn-group-sm[role="group"] {
+        flex-wrap: nowrap !important;
+        gap: 2px !important;
+    }
+    
+    .btn-group-sm[role="group"] .btn {
+        margin: 0 !important;
+        border-radius: 0.25rem !important;
+        min-width: 28px;
+    }
+    
+    /* Fix pagination layout */
+    @media (max-width: 768px) {
+        .d-flex.justify-content-between.align-items-center.mt-3 {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 10px;
+        }
+        
+        .d-flex.justify-content-between.align-items-center.mt-3 nav {
+            align-self: flex-end;
+            margin-top: 5px;
+        }
+        
+        .text-muted.small {
+            white-space: normal;
+            word-break: break-word;
+        }
     }
 </style>
 @endpush

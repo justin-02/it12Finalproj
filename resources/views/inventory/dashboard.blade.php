@@ -10,76 +10,209 @@
     </div>
 </div>
 
-<!-- Stock Overview - Made more compact -->
+<!-- Stock Overview -->
 <div class="row">
+    <!-- Total Products -->
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card dashboard-card" style="background: linear-gradient(135deg, #E8FFD7 0%, #D6F5C3 100%); border: 1px solid rgba(232, 255, 215, 0.3);">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Total Products</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $totalProducts }}</div>
+                <div class="card-content">
+                    <div class="text-content">
+                        <div class="card-title">TOTAL PRODUCTS</div>
+                        <h2 class="card-value">{{ $totalProducts }}</h2>
+                        <div class="trend-indicator">
+                            <i class="bi bi-grid-3x3-gap me-1"></i>
+                            <span>Inventory Count</span>
+                        </div>
                     </div>
-                    <div class="col-auto">
-                        <i class="bi bi-box-seam fa-2x text-gray-300"></i>
+                    <div class="icon-wrapper">
+                        <i class="bi bi-box-seam" style="color: #2E7D32;"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Critical Stocks -->
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card dashboard-card" style="background: linear-gradient(135deg, #E8FFD7 0%, #D6F5C3 100%); border: 1px solid rgba(232, 255, 215, 0.3);">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Critical Stocks</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $criticalProducts }}</div>
+                <div class="card-content">
+                    <div class="text-content">
+                        <div class="card-title" style="color: #FD7E14 !important;">CRITICAL STOCKS</div>
+                        <h2 class="card-value" style="color: #FD7E14 !important;">{{ $criticalProducts }}</h2>
+                        <div class="trend-indicator" style="color: #FD7E14 !important;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            <span>Needs Attention</span>
+                        </div>
                     </div>
-                    <div class="col-auto">
-                        <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
+                    <div class="icon-wrapper">
+                        <i class="bi bi-exclamation-triangle" style="color: #FD7E14;"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- In Stock Items -->
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-success shadow h-100 py-2">
+        <div class="card dashboard-card" style="background: linear-gradient(135deg, #E8FFD7 0%, #D6F5C3 100%); border: 1px solid rgba(232, 255, 215, 0.3);">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            In Stock Items</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $inStockProducts }}</div>
+                <div class="card-content">
+                    <div class="text-content">
+                        <div class="card-title">IN STOCK ITEMS</div>
+                        <h2 class="card-value">{{ $inStockProducts }}</h2>
+                        <div class="trend-indicator">
+                            <i class="bi bi-check-circle me-1"></i>
+                            <span>Available</span>
+                        </div>
                     </div>
-                    <div class="col-auto">
-                        <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                    <div class="icon-wrapper">
+                        <i class="bi bi-check-circle" style="color: #2E7D32;"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Low Stock Items -->
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-info shadow h-100 py-2">
+        <div class="card dashboard-card" style="background: linear-gradient(135deg, #E8FFD7 0%, #D6F5C3 100%); border: 1px solid rgba(232, 255, 215, 0.3);">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Low Stock Items</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">{{ $lowStockProducts }}</div>
+                <div class="card-content">
+                    <div class="text-content">
+                        <div class="card-title" style="color: #FFC107 !important;">LOW STOCK ITEMS</div>
+                        <h2 class="card-value" style="color: #FFC107 !important;">{{ $lowStockProducts }}</h2>
+                        <div class="trend-indicator" style="color: #FFC107 !important;">
+                            <i class="bi bi-exclamation-circle me-1"></i>
+                            <span>Monitor</span>
+                        </div>
                     </div>
-                    <div class="col-auto">
-                        <i class="bi bi-exclamation-circle fa-2x text-gray-300"></i>
+                    <div class="icon-wrapper">
+                        <i class="bi bi-exclamation-circle" style="color: #FFC107;"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Reuse the same dashboard-card styles from previous section */
+.dashboard-card {
+    border: none;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    background: linear-gradient(135deg, #E8FFD7 0%, #D6F5C3 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    height: 140px;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.dashboard-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #8BC34A, #4CAF50);
+}
+
+.dashboard-card .card-body {
+    position: relative;
+    z-index: 1;
+    padding: 1.25rem !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.dashboard-card .card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.dashboard-card .icon-wrapper {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.dashboard-card:hover .icon-wrapper {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.08);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.dashboard-card .icon-wrapper i {
+    font-size: 1.5rem;
+    color: #2E7D32;
+}
+
+.dashboard-card .text-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.dashboard-card .card-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: #1B5E20;
+    margin-bottom: 0.5rem;
+    opacity: 0.95;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dashboard-card .card-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1B5E20;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+}
+
+.dashboard-card .trend-indicator {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.4);
+    color: #1B5E20;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.dashboard-card .trend-indicator i {
+    font-size: 0.8rem;
+}
+</style>
 
 <!-- Critical Stock Alerts - Made more compact -->
 @if($criticalProducts > 0)

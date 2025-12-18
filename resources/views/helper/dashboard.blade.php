@@ -24,87 +24,13 @@
 @endif
 
 <!-- Current Order -->
-@if(isset($currentOrder) && $currentOrder)
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card border-primary">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-cart-check"></i> Current Order ({{ $currentOrder->order_number }})
-                </h5>
-                @if($currentOrder->items->count() > 0)
-                <button type="button" class="btn btn-light btn-sm" id="submitOrderBtn" data-order-id="{{ $currentOrder->id }}" onclick="submitOrder({{ $currentOrder->id }})" title="Order ID: {{ $currentOrder->id }}">
-                    <i class="bi bi-send"></i> Send to Cashier
-                </button>
-                @else
-                <span class="text-light">No items in order</span>
-                @endif
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Unit</th>
-                                <th>Quantity</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if($currentOrder->items->count() > 0)
-                            @foreach($currentOrder->items as $item)
-                            <tr>
-                                <td>{{ $item->product->product_name }} - {{ $item->product->brand }}</td>
-                                <td>
-                                    <span class="badge bg-info text-dark">{{ ucfirst($item->unit) }}</span>
-                                </td>
-                                <td>
-                                    @php
-                                        $isWhole = fmod((float)$item->quantity, 1.0) == 0.0;
-                                    @endphp
-                                    {{ $isWhole ? number_format($item->quantity, 0) : rtrim(rtrim(number_format($item->quantity, 2, '.', ''), '0'), '.') }}
-                                </td>
-                                <td>
-                                    <form method="POST" action="{{ route('helper.remove-order-item', $item->id) }}" style="display: inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this item from order?')">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            @endforeach
-                            @else
-                            <tr>
-                                <td colspan="4" class="text-center text-muted">
-                                    <i class="bi bi-cart-x"></i> No items in this order yet
-                                </td>
-                            </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@else
-<!-- No Current Order Message -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="alert alert-info">
-            <h5><i class="bi bi-info-circle"></i> No Active Order</h5>
-            <p class="mb-0">You don't have any active order. Click "Add to Order" to start preparing products for the cashier.</p>
-        </div>
-    </div>
-</div>
-@endif
+
 
 <!-- Available Products -->
 <div class="row">
-    <div class="col-12">
+
+    <!-- LEFT SIDE — AVAILABLE PRODUCTS (8 columns) -->
+    <div class="col-md-8">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title">Available Products</h5>
@@ -123,64 +49,121 @@
                                 <th>Action</th>
                             </tr>
                         </thead>
+
                         <tbody>
-                           @foreach($products as $product)
-                            @php
-                                $isOutOfStock = $product->current_stock_sacks <= 0 && $product->current_stock_pieces <= 0;
-                                $isLowStock = $product->is_critical && !$isOutOfStock;
-                            @endphp
+                            @foreach($products as $product)
+                                {{-- your existing product rows here --}}
+                                @php
+                                    $isOutOfStock = $product->current_stock_sacks <= 0 && $product->current_stock_pieces <= 0;
+                                    $isLowStock = $product->is_critical && !$isOutOfStock;
+                                @endphp
 
-                            <tr class="{{ $isOutOfStock ? 'table-danger' : ($isLowStock ? 'table-warning' : '') }}">
-                                <td>{{ $product->product_name }}</td>
-                                <td>{{ $product->brand }}</td>
+                                <tr class="{{ $isOutOfStock ? 'table-danger' : ($isLowStock ? 'table-warning' : '') }}">
+                                    <td>{{ $product->product_name }}</td>
+                                    <td>{{ $product->brand }}</td>
 
-                                <td class="text-end">
-                                    @php
-                                        $isWholeSacks = fmod((float)$product->current_stock_sacks, 1.0) == 0.0;
-                                    @endphp
-                                    {{ $isWholeSacks ? number_format($product->current_stock_sacks, 0) : rtrim(rtrim(number_format($product->current_stock_sacks, 2, '.', ''), '0'), '.') }}
-                                    <small class="text-muted">({{ number_format($product->current_stock_sacks * 50, 0) }} kg)</small>
-                                    @if($product->current_stock_sacks > 0 && $product->current_stock_sacks <= $product->critical_level_sacks)
-                                        <i class="bi bi-exclamation-triangle text-danger"></i>
-                                    @endif
-                                </td>
+                                    <td class="text-end">
+                                        @php
+                                            $isWholeSacks = fmod((float)$product->current_stock_sacks, 1.0) == 0.0;
+                                        @endphp
+                                        {{ $isWholeSacks ? number_format($product->current_stock_sacks, 0) : rtrim(rtrim(number_format($product->current_stock_sacks, 2, '.', ''), '0'), '.') }}
+                                        <small class="text-muted">({{ number_format($product->current_stock_sacks * 50, 0) }} kg)</small>
+                                    </td>
 
-                                <td class="text-end">
-                                    {{ $product->current_stock_pieces }}
-                                    @if($product->current_stock_pieces > 0 && $product->current_stock_pieces <= $product->critical_level_pieces)
-                                        <i class="bi bi-exclamation-triangle text-danger"></i>
-                                    @endif
-                                </td>
+                                    <td class="text-end">{{ $product->current_stock_pieces }}</td>
 
-                                <td class="text-end">₱{{ number_format($product->price, 2) }}</td>
+                                    <td class="text-end">₱{{ number_format($product->price, 2) }}</td>
 
-                                <td>
-                                    @if($isOutOfStock)
-                                        <span class="badge bg-danger">Out of Stock</span>
-                                    @elseif($isLowStock)
-                                        <span class="badge bg-warning">Low Stock</span>
-                                    @else
-                                        <span class="badge bg-success">In Stock</span>
-                                    @endif
-                                </td>
+                                    <td>
+                                        @if($isOutOfStock)
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                        @elseif($isLowStock)
+                                            <span class="badge bg-warning">Low Stock</span>
+                                        @else
+                                            <span class="badge bg-success">In Stock</span>
+                                        @endif
+                                    </td>
 
-                                <td>
-                                    <button class="btn btn-sm btn-primary"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#prepareOrderModal"
-                                            onclick="setProductForOrder({{ $product->id }}, '{{ $product->product_name }} - {{ $product->brand }}', {{ $product->current_stock_sacks }}, {{ $product->current_stock_pieces }}, {{ $product->price }})"
-                                            {{ $isOutOfStock ? 'disabled' : '' }}>
-                                        <i class="bi bi-cart-plus"></i> Add to Order
-                                    </button>
-                                </td>
-                            </tr>
-                        @endforeach
+                                    <td>
+                                        <button class="btn btn-sm btn-primary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#prepareOrderModal"
+                                                onclick="setProductForOrder({{ $product->id }}, '{{ $product->product_name }} - {{ $product->brand }}', {{ $product->current_stock_sacks }}, {{ $product->current_stock_pieces }}, {{ $product->price }})"
+                                                {{ $isOutOfStock ? 'disabled' : '' }}>
+                                            <i class="bi bi-cart-plus"></i> Add to Order
+                                        </button>
+                                    </td>
+                                </tr>
 
+                            @endforeach
                         </tbody>
+
                     </table>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- RIGHT SIDE — CURRENT ORDER (4 columns) -->
+    <div class="col-md-4">
+
+        @if(isset($currentOrder) && $currentOrder)
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white d-flex justify-content-between">
+                <h5 class="mb-0"><i class="bi bi-cart-check"></i> Current Order ({{ $currentOrder->order_number }})</h5>
+
+                @if($currentOrder->items->count() > 0)
+                <button class="btn btn-light btn-sm"
+                        onclick="submitOrder({{ $currentOrder->id }})">
+                    <i class="bi bi-send"></i> Send
+                </button>
+                @endif
+            </div>
+
+            <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Unit</th>
+                            <th>Qty</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @forelse($currentOrder->items as $item)
+                        <tr>
+                            <td>{{ $item->product->product_name }}</td>
+                            <td>{{ ucfirst($item->unit) }}</td>
+                            <td>{{ $item->quantity }}</td>
+                            <td>
+                                <form method="POST" action="{{ route('helper.remove-order-item', $item->id) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">
+                                <i class="bi bi-cart-x"></i> No items
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+
+        @else
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No active order.
+        </div>
+        @endif
+
     </div>
 </div>
 

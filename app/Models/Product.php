@@ -46,7 +46,9 @@ class Product extends Model
     }
     public function batches()
     {
-        return $this->hasMany(Batch::class);
+        return $this->belongsToMany(Batch::class, 'batch_products')
+            ->withPivot('quantity')
+            ->withTimestamps();
     }
 
 
@@ -159,7 +161,7 @@ class Product extends Model
         switch ($unit) {
             case 'sack':
                 return $this->price * $quantity;
-            case 'kilo':
+            case 'kilo':    
                 $pricePerKilo = $this->price / 50;
                 return $pricePerKilo * $quantity;
             case 'piece':
@@ -169,5 +171,7 @@ class Product extends Model
             default:
                 return 0;
         }
+        
     }
+    
 }

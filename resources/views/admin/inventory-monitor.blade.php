@@ -8,32 +8,192 @@
     <div></div>
 </div>
 
-<!-- Summary Cards -->
+<style>
+.product-summary-card {
+    border: none;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    height: 120px;
+}
+
+.product-summary-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.product-summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+.product-summary-card .card-body {
+    position: relative;
+    z-index: 1;
+    padding: 1rem !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+
+.product-summary-card .card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.product-summary-card .text-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.product-summary-card .card-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.4rem;
+    opacity: 0.95;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-summary-card .card-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+}
+
+.product-summary-card .icon-wrapper {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.product-summary-card:hover .icon-wrapper {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.08);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.product-summary-card .icon-wrapper i {
+    font-size: 1.3rem;
+}
+
+/* ALL CARDS HAVE THE SAME GREEN BACKGROUND */
+.product-summary-card.total-products,
+.product-summary-card.normal-stock,
+.product-summary-card.critical-stock,
+.product-summary-card.out-of-stock {
+    background: linear-gradient(135deg, #E8FFD7 0%, #D6F5C3 100%);
+    border-color: rgba(214, 245, 195, 0.3);
+    box-shadow: 0 4px 12px rgba(214, 245, 195, 0.2);
+}
+
+.product-summary-card.total-products::before,
+.product-summary-card.normal-stock::before,
+.product-summary-card.critical-stock::before,
+.product-summary-card.out-of-stock::before {
+    background: linear-gradient(90deg, #8BC34A, #4CAF50);
+}
+
+/* Total Products - Green Text */
+.product-summary-card.total-products .card-title,
+.product-summary-card.total-products .card-value,
+.product-summary-card.total-products .icon-wrapper i {
+    color: #1B5E20;
+}
+
+/* Normal Stock - Green Text */
+.product-summary-card.normal-stock .card-title,
+.product-summary-card.normal-stock .card-value,
+.product-summary-card.normal-stock .icon-wrapper i {
+    color: #1B5E20;
+}
+
+/* Critical Stock - YELLOW Text */
+.product-summary-card.critical-stock .card-title,
+.product-summary-card.critical-stock .card-value {
+    color: #FF8F00;
+}
+
+.product-summary-card.critical-stock .icon-wrapper i {
+    color: #FF8F00;
+}
+
+/* Out of Stock - RED Text */
+.product-summary-card.out-of-stock .card-title,
+.product-summary-card.out-of-stock .card-value {
+    color: #D32F2F;
+}
+
+.product-summary-card.out-of-stock .icon-wrapper i {
+    color: #D32F2F;
+}
+</style>
+
+<!-- Product Summary Cards -->
 <div class="row mb-3">
     @php
         $cardStats = [
-            ['title' => 'Total Products', 'value' => $products->count(), 'icon' => 'bi-box-seam', 'color' => 'primary'],
-            ['title' => 'Normal Stock', 'value' => $products->where('is_active', true)->where('is_critical', false)->count(), 'icon' => 'bi-check-circle', 'color' => 'success'],
-            ['title' => 'Critical Stock', 'value' => $products->where('is_critical', true)->count(), 'icon' => 'bi-exclamation-triangle', 'color' => 'warning'],
-            ['title' => 'Out of Stock', 'value' => $products->where('current_stock_sacks', '<=', 0)->where('current_stock_pieces', '<=', 0)->where('is_active', true)->count(), 'icon' => 'bi-x-circle', 'color' => 'danger']
+            [
+                'title' => 'Total Products', 
+                'value' => $products->total(), 
+                'icon' => 'bi-box-seam', 
+                'class' => 'total-products'
+            ],
+            [
+                'title' => 'Normal Stock', 
+                'value' => $normalStockCount, 
+                'icon' => 'bi-check-circle', 
+                'class' => 'normal-stock'
+            ],
+            [
+                'title' => 'Critical Stock', 
+                'value' => $criticalStockCount, 
+                'icon' => 'bi-exclamation-triangle', 
+                'class' => 'critical-stock'
+            ],
+            [
+                'title' => 'Out of Stock', 
+                'value' => $outOfStockCount, 
+                'icon' => 'bi-x-circle', 
+                'class' => 'out-of-stock'
+            ]
         ];
     @endphp
 
     @foreach($cardStats as $card)
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-{{ $card['color'] }} shadow h-100 py-2">
+        <div class="card product-summary-card {{ $card['class'] }} h-100">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col">
-                        <div class="text-xs font-weight-bold text-{{ $card['color'] }} text-uppercase mb-1 text-start">
-                            {{ $card['title'] }}
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-end">
-                            {{ $card['value'] }}
-                        </div>
+                <div class="card-content">
+                    <div class="text-content">
+                        <div class="card-title">{{ $card['title'] }}</div>
+                        <div class="card-value">{{ $card['value'] }}</div>
                     </div>
-                    <div class="col-auto">
-                        <i class="bi {{ $card['icon'] }} fa-2x text-gray-300"></i>
+                    <div class="icon-wrapper">
+                        <i class="bi {{ $card['icon'] }}"></i>
                     </div>
                 </div>
             </div>
@@ -43,7 +203,7 @@
 </div>
 
 <!-- Critical Stock Alerts -->
-@if($products->where('is_critical', true)->count() > 0)
+@if($criticalProducts->count() > 0)
 <div class="row mb-3">
     <div class="col-12">
         <div class="card border-warning shadow-sm">
@@ -66,10 +226,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($products->where('is_critical', true) as $product)
+                            @foreach($criticalProducts as $product)
                             <tr class="critical-stock">
                                 <td class="small text-start">
-                                    <strong>{{ $product->product_name }}</strong>
+                                    <strong class="fw-bold">{{ $product->product_name }}</strong>
                                     <i class="bi bi-exclamation-triangle text-warning ms-1" title="Critical Stock"></i>
                                 </td>
                                 <td class="small text-start">{{ $product->brand }}</td>
@@ -146,7 +306,7 @@
                             @foreach($products as $product)
                             <tr class="{{ $product->is_critical ? 'table-warning' : '' }}  {{ !$product->is_active ? 'table-secondary' : '' }} {{ ($product->current_stock_sacks <= 0 && $product->current_stock_pieces <= 0 && $product->is_active) ? 'table-danger' : '' }}">
                                 <td class="small text-start">
-                                    <strong>{{ $product->product_name }}</strong>
+                                    <strong class="fw-bold">{{ $product->product_name }}</strong>
                                     @if($product->is_critical)
                                         <i class="bi bi-exclamation-triangle text-warning ms-1"></i>
                                     @endif
@@ -197,6 +357,53 @@
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- Pagination -->
+                @if($products->hasPages())
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="small text-muted">
+                        Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{ $products->total() }} products
+                    </div>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            {{-- Previous Page Link --}}
+                            @if ($products->onFirstPage())
+                                <li class="page-item disabled">
+                                    <span class="page-link">&laquo;</span>
+                                </li>
+                            @else
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ $products->previousPageUrl() }}" rel="prev">&laquo;</a>
+                                </li>
+                            @endif
+                            
+                            {{-- Pagination Elements --}}
+                            @foreach ($products->getUrlRange(1, $products->lastPage()) as $page => $url)
+                                @if ($page == $products->currentPage())
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ $page }}</span>
+                                    </li>
+                                @else
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                    </li>
+                                @endif
+                            @endforeach
+                            
+                            {{-- Next Page Link --}}
+                            @if ($products->hasMorePages())
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ $products->nextPageUrl() }}" rel="next">&raquo;</a>
+                                </li>
+                            @else
+                                <li class="page-item disabled">
+                                    <span class="page-link">&raquo;</span>
+                                </li>
+                            @endif
+                        </ul>
+                    </nav>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -244,142 +451,117 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        // Disable DataTables pagination since we're using Laravel pagination
         $('#inventoryTable').DataTable({
-            "pageLength": 25,
-            "order": [[0, "asc"]],
+            "pageLength": 10,
+            "ordering": false,
+            "searching": false,
+            "info": false,
+            "paging": false,
+            "order": [],
             "language": {
                 "search": "Search products:",
-                "lengthMenu": "Show _MENU_ entries",
-                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
-                "paginate": {
-                    "previous": "<i class='bi bi-chevron-left'></i>",
-                    "next": "<i class='bi bi-chevron-right'></i>"
-                }
+                "emptyTable": "No data available in table"
             },
-            "dom": '<"row"<"col-sm-12"tr>>',
-            "initComplete": function() {
-                // Add custom styling after initialization
-                $('.dataTables_length').addClass('mt-2');
-                $('.dataTables_info').addClass('mt-2');
-            }
-        });
-
-        // Add export functionality
-        function exportToExcel() {
-            const table = $('#inventoryTable').DataTable();
-            const data = table.rows({ search: 'applied' }).data();
-            let csvContent = "data:text/csv;charset=utf-8,";
-            
-            // Add headers
-            const headers = ['Product Name', 'Brand', 'Price', 'Stock (Sacks)', 'Stock (Pieces)', 'Critical Level', 'Status'];
-            csvContent += headers.join(',') + '\r\n';
-            
-            // Add data
-            data.each(function(value, index) {
-                const row = [
-                    value[0], // Product Name
-                    value[1], // Brand
-                    value[2].replace('₱', ''), // Price
-                    value[3].split('<')[0].trim(), // Stock Sacks
-                    value[4].split('<')[0].trim(), // Stock Pieces
-                    value[5].replace(/<[^>]*>/g, ''), // Critical Level
-                    value[6]  // Status
-                ];
-                csvContent += row.join(',') + '\r\n';
-            });
-            
-            // Download
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "inventory_monitor.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // Add print functionality
-        function printInventory() {
-            const table = $('#inventoryTable').DataTable();
-            const data = table.rows({ search: 'applied' }).data();
-            
-            let printContent = `
-                <html>
-                <head>
-                    <title>Inventory Monitor Report</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; font-size: 12px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-                        th { background-color: #f2f2f2; }
-                        .critical { background-color: #fff3cd; }
-                        .inactive { background-color: #e9ecef; }
-                        .text-center { text-align: center; }
-                    </style>
-                </head>
-                <body>
-                    <h2>Inventory Monitor Report</h2>
-                    <p>Generated on: ${new Date().toLocaleString()}</p>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Product Name</th>
-                                <th>Brand</th>
-                                <th>Price</th>
-                                <th>Stock (Sacks)</th>
-                                <th>Stock (Pieces)</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            data.each(function(value, index) {
-                const isCritical = $(value[0]).find('.bi-exclamation-triangle').length > 0;
-                const isInactive = value[6].includes('Inactive');
-                printContent += `
-                    <tr class="${isCritical ? 'critical' : ''} ${isInactive ? 'inactive' : ''}">
-                        <td>${$(value[0]).text().trim()}</td>
-                        <td>${value[1]}</td>
-                        <td>${value[2]}</td>
-                        <td>${$(value[3]).text().split('(')[0].trim()}</td>
-                        <td>${$(value[4]).text().split('<')[0].trim()}</td>
-                        <td>${value[6]}</td>
-                    </tr>
-                `;
-            });
-            
-            printContent += `
-                        </tbody>
-                    </table>
-                </body>
-                </html>
-            `;
-            
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            printWindow.print();
-        }
-
-        // Add buttons to the table
-        $(document).ready(function() {
-            $('.dataTables_length').before(`
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-outline-success" onclick="exportToExcel()">
-                                <i class="bi bi-file-earmark-excel"></i> Export
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="printInventory()">
-                                <i class="bi bi-printer"></i> Print
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `);
+            "dom": '<"row"<"col-sm-12"tr>>'
         });
     });
+
+    function exportToExcel() {
+        const table = $('#inventoryTable').DataTable();
+        const data = table.rows({ search: 'applied' }).data();
+        let csvContent = "data:text/csv;charset=utf-8,";
+        
+        // Add headers
+        const headers = ['Product Name', 'Brand', 'Price', 'Stock (Sacks)', 'Stock (Pieces)', 'Critical Level', 'Status'];
+        csvContent += headers.join(',') + '\r\n';
+        
+        // Add data
+        data.each(function(value, index) {
+            const row = [
+                value[0], // Product Name
+                value[1], // Brand
+                value[2].replace('₱', ''), // Price
+                value[3].split('<')[0].trim(), // Stock Sacks
+                value[4].split('<')[0].trim(), // Stock Pieces
+                value[5].replace(/<[^>]*>/g, ''), // Critical Level
+                value[6]  // Status
+            ];
+            csvContent += row.join(',') + '\r\n';
+        });
+        
+        // Download
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "inventory_monitor.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function printInventory() {
+        const table = $('#inventoryTable').DataTable();
+        const data = table.rows({ search: 'applied' }).data();
+        
+        let printContent = `
+            <html>
+            <head>
+                <title>Inventory Monitor Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 12px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                    .critical { background-color: #fff3cd; }
+                    .inactive { background-color: #e9ecef; }
+                    .text-center { text-align: center; }
+                </style>
+            </head>
+            <body>
+                <h2>Inventory Monitor Report</h2>
+                <p>Generated on: ${new Date().toLocaleString()}</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Brand</th>
+                            <th>Price</th>
+                            <th>Stock (Sacks)</th>
+                            <th>Stock (Pieces)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        data.each(function(value, index) {
+            const isCritical = $(value[0]).find('.bi-exclamation-triangle').length > 0;
+            const isInactive = value[6].includes('Inactive');
+            printContent += `
+                <tr class="${isCritical ? 'critical' : ''} ${isInactive ? 'inactive' : ''}">
+                    <td>${$(value[0]).text().trim()}</td>
+                    <td>${value[1]}</td>
+                    <td>${value[2]}</td>
+                    <td>${$(value[3]).text().split('(')[0].trim()}</td>
+                    <td>${$(value[4]).text().split('<')[0].trim()}</td>
+                    <td>${value[6]}</td>
+                </tr>
+            `;
+        });
+        
+        printContent += `
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.print();
+    }
 
     function setProductForMessage(productId, productName, brand) {
         document.getElementById('message_product_id').value = productId;
@@ -408,6 +590,32 @@
     }
     .critical-stock {
         background-color: #fff3cd !important;
+    }
+    
+    /* Fixed font size for product names - added fw-bold */
+    #inventoryTable tbody td:first-child strong {
+        font-weight: bold !important;
+    }
+    
+    /* Pagination Styles */
+    .pagination .page-item.active .page-link {
+        background-color: #1E88E5;
+        border-color: #1E88E5;
+        color: white;
+    }
+    
+    .pagination .page-link {
+        color: #1E88E5;
+        border: 1px solid #dee2e6;
+    }
+    
+    .pagination .page-link:hover {
+        background-color: #f8f9fa;
+        color: #1565C0;
+    }
+    
+    .pagination .page-item.disabled .page-link {
+        color: #6c757d;
     }
 </style>
 @endpush

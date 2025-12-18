@@ -55,6 +55,22 @@
                         <span>Batch List</span>
                     </a>
                 </li>
+                @if(auth()->user()->isAdmin())
+                <li class="nav-item">
+                    <a href="{{ route('admin.employee-monitoring') }}" 
+                    class="nav-link {{ request()->routeIs('admin.employee-monitoring') ? 'active' : '' }}">
+                        <i class="bi bi-person-badge"></i>
+                        <span>Employee Monitoring</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.employees.*') ? 'active' : '' }}" href="{{ route('admin.employees.index') }}">
+                        <i class="bi bi-people"></i>
+                        <span>Employees</span>
+                    </a>
+                </li>
+                @endif
+
 
 
             @elseif(auth()->user()->isInventory())
@@ -68,12 +84,6 @@
                     <a class="nav-link {{ Request::is('inventory/products') ? 'active' : '' }}" href="{{ route('inventory.products') }}">
                         <i class="bi bi-box-seam"></i>
                         <span>Products</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ Request::is('inventory/batches') ? 'active' : '' }}" href="{{ route('inventory.batches') }}">
-                        <i class="bi bi-archive"></i>
-                        <span>Batch List</span>
                     </a>
                 </li>
                 <li class="nav-item">
